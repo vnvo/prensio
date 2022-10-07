@@ -1,0 +1,54 @@
+[mysql]
+name = "company_db_1234"
+addr = "127.0.0.1"
+port = 7778
+user = "root"
+pass = "root"
+server_id = 1
+
+[source_rules]
+include_schemas = [
+    "test_.*",
+    ""
+]
+
+exclude_schemas = [
+    "test_123"
+]
+
+include_tables = [
+    "table_.*"
+]
+
+exclude_tables = [
+    "table_1"
+]
+
+[[transform_rule]]
+name = "generic"
+match_schema = "test_.*"
+match_table = "table_1"
+transform_func = """
+function transform(cdc_event) {
+    if cdc_event.username.length > 3 {
+        cdc_event.username.replace('test', 'oooweee')
+    }
+}
+"""
+
+[[transform_rule]]
+name = "another-rule"
+match_schema = "tenant_.*"
+match_table = "entity_1"
+transform_func = """
+function transform(cdc_event) {
+    if cdc_event.username.length > 5 {
+        cdc_event.username.replace('value', 'changed')
+    }
+"""
+
+[kafka_sink]
+name = "kafka-company-db"
+addr = "192.168.1.1"
+port = 9222
+batch_size_bytes = 2048
