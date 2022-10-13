@@ -13,7 +13,7 @@ type MySQLSourceConfig struct {
 	Port     int16  `toml:"port"`
 	User     string `toml:"user"`
 	Pass     string `toml:"pass"`
-	ServerId int16  `toml:"server_id"`
+	ServerId uint32 `toml:"server_id"`
 }
 
 type SourceRule struct {

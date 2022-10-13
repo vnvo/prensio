@@ -1,7 +1,7 @@
 [mysql]
 name = "company_db_1234"
-addr = "127.0.0.1"
-port = 7778
+addr = "127.0.0.1:6606"
+port = 6606
 user = "root"
 pass = "root"
 server_id = 1
