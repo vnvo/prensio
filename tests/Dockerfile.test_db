@@ -1,0 +1,11 @@
+FROM percona/percona-server:8.0
+
+EXPOSE 3306
+
+ENV MYSQL_ROOT_PASSWORD=root
+
+ENV MYSQL_DATABASE="main_test"
+
+COPY ./db_setup/db_init/02-schemas.sql /docker-entrypoint-initdb.d
+
+COPY ./db_setup/my-test.cnf /etc/my.cnf.d/

@@ -1,0 +1,5 @@
+[mysqld]
+binlog_format=ROW
+binlog_row_image=full
+gtid_mode=ON
+enforce_gtid_consistency=ON

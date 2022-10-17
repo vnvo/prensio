@@ -39,6 +39,7 @@ func (h *eventHandler) OnXID(nextPos mysql.Position) error {
 
 func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
 	fmt.Println("OnRow. event:", e)
+	fmt.Println("table schema", e.Table.Schema, e.Table.Columns, e.Table.Indexes)
 	return nil
 }
 
