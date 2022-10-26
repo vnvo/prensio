@@ -33,7 +33,7 @@ func setupMySQL(ctx context.Context) (*mysqlContainer, error) {
 	req := testcontainers.ContainerRequest{
 		FromDockerfile: testcontainers.FromDockerfile{
 			Context:    contextPath,
-			Dockerfile: "Dockerfile.test",
+			Dockerfile: "Dockerfile.test_db",
 		},
 		WaitingFor: wait.ForLog("/usr/sbin/mysqld: ready for connections"),
 	}

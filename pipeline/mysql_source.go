@@ -4,18 +4,21 @@ import (
 	"context"
 
 	"github.com/go-mysql-org/go-mysql/canal"
+	cdc "github.com/vnvo/go-mysql-kafka/cdc_event"
 	"github.com/vnvo/go-mysql-kafka/config"
 )
 
 type MySQLBinlogSource struct {
-	config *config.MySQLSourceConfig
-	canal  *canal.Canal
+	config  *config.MySQLSourceConfig
+	canal   *canal.Canal
+	eventCh chan cdc.CDCEvent
 }
 
 func NewMySQLBinlogSource(config *config.CDCConfig) (MySQLBinlogSource, error) {
 	mys := MySQLBinlogSource{
 		&config.Mysql,
 		nil,
+		make(chan cdc.CDCEvent),
 	}
 
 	err := mys.prepareCanal()
@@ -55,8 +58,16 @@ func (mys *MySQLBinlogSource) Init() error {
 	return nil
 }
 
-func (mys *MySQLBinlogSource) Run(ctx context.Context) error {
+func (mys *MySQLBinlogSource) Run(ctx context.Context, transform string) error {
+	go func() {
+		mys.readFromHandler(ctx, transform)
+		<-ctx.Done()
+	}()
+
 	mys.canal.Run()
+
+	<-ctx.Done()
+
 	return nil
 }
 

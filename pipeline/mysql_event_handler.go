@@ -1,11 +1,14 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/go-mysql-org/go-mysql/replication"
+	cdc "github.com/vnvo/go-mysql-kafka/cdc_event"
 )
 
 type eventHandler struct {
@@ -38,8 +41,8 @@ func (h *eventHandler) OnXID(nextPos mysql.Position) error {
 }
 
 func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
-	fmt.Println("OnRow. event:", e)
-	fmt.Println("table schema", e.Table.Schema, e.Table.Columns, e.Table.Indexes)
+	h.source.eventCh <- cdc.NewCDCEvent(e)
+
 	return nil
 }
 
@@ -53,8 +56,19 @@ func (h *eventHandler) String() string {
 }
 
 func (h *eventHandler) OnPosSynced(pos mysql.Position, set mysql.GTIDSet, force bool) error {
+	fmt.Printf("OnPosSynced. pos=%v, set=%v, force=%v\n", pos, set, force)
 	return nil
 }
 
-func (mys *MySQLBinlogSource) handlerLoop() {
+func (mys *MySQLBinlogSource) readFromHandler(ctx context.Context, transform string) {
+	for {
+		select {
+		case e := <-mys.eventCh:
+			fmt.Println(e.ToJson())
+		case <-ctx.Done():
+			return
+		case <-time.After(time.Second * 1):
+			//fmt.Println("just waiting for other channels ...")
+		}
+	}
 }

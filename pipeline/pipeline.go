@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/vnvo/go-mysql-kafka/config"
 )
@@ -12,7 +13,7 @@ type CDCPipeline struct {
 	config *config.CDCConfig
 	source MySQLBinlogSource
 
-	//wg sync.WaitGroup
+	wg sync.WaitGroup
 }
 
 func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
@@ -30,6 +31,7 @@ func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
 		name,
 		config,
 		mys,
+		sync.WaitGroup{},
 	}
 }
 
@@ -41,6 +43,16 @@ func (cdc *CDCPipeline) Init() error {
 }
 
 func (cdc *CDCPipeline) Run(ctx context.Context) error {
-	cdc.source.Run(ctx)
+	cdc.wg.Add(1)
+	go func() {
+		defer cdc.wg.Done()
+		cdc.source.Run(ctx, "")
+	}()
+
+	select {
+	case <-ctx.Done():
+		fmt.Println("pipeline.Run -> Done.")
+	}
+
 	return nil
 }
