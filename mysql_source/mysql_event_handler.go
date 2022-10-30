@@ -1,9 +1,7 @@
-package pipeline
+package mysql_source
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
@@ -58,17 +56,4 @@ func (h *eventHandler) String() string {
 func (h *eventHandler) OnPosSynced(pos mysql.Position, set mysql.GTIDSet, force bool) error {
 	fmt.Printf("OnPosSynced. pos=%v, set=%v, force=%v\n", pos, set, force)
 	return nil
-}
-
-func (mys *MySQLBinlogSource) readFromHandler(ctx context.Context, transform string) {
-	for {
-		select {
-		case e := <-mys.eventCh:
-			fmt.Println(e.ToJson())
-		case <-ctx.Done():
-			return
-		case <-time.After(time.Second * 1):
-			//fmt.Println("just waiting for other channels ...")
-		}
-	}
 }

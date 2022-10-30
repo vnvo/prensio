@@ -1,4 +1,4 @@
-package pipeline
+package mysql_source
 
 import (
 	"context"
@@ -11,14 +11,14 @@ import (
 type MySQLBinlogSource struct {
 	config  *config.MySQLSourceConfig
 	canal   *canal.Canal
-	eventCh chan cdc.CDCEvent
+	eventCh chan<- cdc.CDCEvent
 }
 
-func NewMySQLBinlogSource(config *config.CDCConfig) (MySQLBinlogSource, error) {
+func NewMySQLBinlogSource(config *config.CDCConfig, eventCh chan<- cdc.CDCEvent) (MySQLBinlogSource, error) {
 	mys := MySQLBinlogSource{
 		&config.Mysql,
 		nil,
-		make(chan cdc.CDCEvent),
+		eventCh,
 	}
 
 	err := mys.prepareCanal()
@@ -58,14 +58,8 @@ func (mys *MySQLBinlogSource) Init() error {
 	return nil
 }
 
-func (mys *MySQLBinlogSource) Run(ctx context.Context, transform string) error {
-	go func() {
-		mys.readFromHandler(ctx, transform)
-		<-ctx.Done()
-	}()
-
+func (mys *MySQLBinlogSource) Run(ctx context.Context) error {
 	mys.canal.Run()
-
 	<-ctx.Done()
 
 	return nil
