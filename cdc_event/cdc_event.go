@@ -30,7 +30,7 @@ func NewCDCEvent(raw_event *canal.RowsEvent) CDCEvent {
 		raw_event.Action,
 		nil,
 		nil,
-		CDCEventMeta{time.Now().UnixMicro(), ""},
+		CDCEventMeta{time.Now().UnixMicro(), "test-pipeline"},
 	}
 
 	switch cdc_event.Action {

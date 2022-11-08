@@ -1,10 +1,10 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/siddontang/go-log/log"
 )
 
 type MySQLSourceConfig struct {
@@ -48,17 +48,12 @@ func NewCDCConfig(path string) CDCConfig {
 	var conf CDCConfig
 
 	data, err := ioutil.ReadFile(path)
-	fmt.Printf("%s - %v\n", data, err)
+	log.Debugf("config. data: \n%s - err:%v\n", data, err)
 	err = toml.Unmarshal(data, &conf)
 
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Printf("MySQL = %v\n", conf.Mysql)
-	fmt.Printf("Source Rules = %v\n", conf.SourceRules)
-	fmt.Printf("Transform Rule = %v\n", conf.TransformRules)
-	fmt.Printf("Kafka Sink = %v\n", conf.KafkaSink)
 
 	return conf
 }

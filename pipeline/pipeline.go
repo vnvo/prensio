@@ -2,10 +2,10 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
+	"github.com/siddontang/go-log/log"
 	"github.com/vnvo/go-mysql-kafka/cdc_event"
 	"github.com/vnvo/go-mysql-kafka/config"
 	"github.com/vnvo/go-mysql-kafka/mysql_source"
@@ -51,7 +51,6 @@ func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
 }
 
 func (cdc *CDCPipeline) Init() error {
-	fmt.Println("init called on cdc-pipeline:", cdc.name)
 	cdc.source.Init()
 
 	return nil
@@ -79,10 +78,9 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 	for {
 		select {
 		case e := <-cdc.rawEventCh:
-			fmt.Println(e.ToJson())
 			cdc.transf.Apply(&e)
-			fmt.Println(" == after transform ==")
-			fmt.Println(e.ToJson())
+			d, err := e.ToJson()
+			log.Debugf("after transform == json:%v - err:%v", d, err)
 		case <-ctx.Done():
 			return
 		case <-time.After(time.Second * 1):

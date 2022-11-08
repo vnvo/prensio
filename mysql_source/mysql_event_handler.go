@@ -1,11 +1,10 @@
 package mysql_source
 
 import (
-	"fmt"
-
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/go-mysql-org/go-mysql/replication"
+	"github.com/siddontang/go-log/log"
 	cdc "github.com/vnvo/go-mysql-kafka/cdc_event"
 )
 
@@ -19,33 +18,32 @@ func (h *eventHandler) OnRotate(e *replication.RotateEvent) error {
 		Pos:  uint32(e.Position),
 	}
 
-	fmt.Println("OnRotate. Pos:", pos)
+	log.Debugf("OnRotate. Name: %s, Position: %d", pos.Name, pos.Pos)
 	return nil
 }
 
 func (h *eventHandler) OnTableChanged(schema, table string) error {
-	fmt.Println("OnTableChanged. table, schema:", table, schema)
+	log.Debugf("OnTableChanged. table: %s, schema: %s", schema, table)
 	return nil
 }
 
 func (h *eventHandler) OnDDL(nextPos mysql.Position, _ *replication.QueryEvent) error {
-	fmt.Println("OnDLL. nextPos:", nextPos)
+	log.Debugf("OnDLL. nextPos: %s", nextPos)
 	return nil
 }
 
 func (h *eventHandler) OnXID(nextPos mysql.Position) error {
-	fmt.Println("OnXID. nextPos:", nextPos)
+	log.Debugf("OnXID. nextPosition.Name: %s, nextPosition.Pos: %d", nextPos.Name, nextPos.Pos)
 	return nil
 }
 
 func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
 	h.source.eventCh <- cdc.NewCDCEvent(e)
-
 	return nil
 }
 
 func (h *eventHandler) OnGTID(gtid mysql.GTIDSet) error {
-	fmt.Println("OnGITD. gtid:", gtid)
+	log.Debugf("OnGTID. %s", gtid.String())
 	return nil
 }
 
@@ -54,6 +52,6 @@ func (h *eventHandler) String() string {
 }
 
 func (h *eventHandler) OnPosSynced(pos mysql.Position, set mysql.GTIDSet, force bool) error {
-	fmt.Printf("OnPosSynced. pos=%v, set=%v, force=%v\n", pos, set, force)
+	log.Debugf("OnPosSynced. pos=%v, set=%v, force=%v", pos, set, force)
 	return nil
 }

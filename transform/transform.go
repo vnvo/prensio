@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/dop251/goja"
+	"github.com/siddontang/go-log/log"
 	"github.com/vnvo/go-mysql-kafka/cdc_event"
 	"github.com/vnvo/go-mysql-kafka/config"
 )
@@ -16,6 +18,8 @@ type rule struct {
 	name    string
 	schemaP *regexp.Regexp
 	tableP  *regexp.Regexp
+	tFunc   string
+	runtime *goja.Runtime
 }
 
 func NewTransform(conf *config.CDCConfig) (*Transform, error) {
@@ -33,16 +37,33 @@ func NewTransform(conf *config.CDCConfig) (*Transform, error) {
 			return nil, err
 		}
 
-		t_rule := rule{
+		tRule := rule{
 			rconf.Name,
 			ms,
 			mt,
+			rconf.TransformFunc,
+			getTransformRuntime(rconf.Name, rconf.TransformFunc),
 		}
 
-		rules = append(rules, t_rule)
+		rules = append(rules, tRule)
 	}
 
 	return &Transform{&rules}, nil
+}
+
+func getTransformRuntime(ruleName string, transform_func string) *goja.Runtime {
+	log.Debugf("creating transformer runtime for: %s", ruleName)
+	vm := goja.New()
+
+	vm.SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
+	registerTransformers(vm)
+
+	_, err := vm.RunString(transform_func)
+	if err != nil {
+		panic(err)
+	}
+
+	return vm
 }
 
 func (t *Transform) Apply(cdc_e *cdc_event.CDCEvent) error {
@@ -57,12 +78,33 @@ func (t *Transform) Apply(cdc_e *cdc_event.CDCEvent) error {
 }
 
 func (tr *rule) Apply(cdc_e *cdc_event.CDCEvent) error {
-	fmt.Printf(
-		" === transform rule - name=%v, rule.schema-re=%v, event-schema=%v, rule.table-re=%v, event-table=%v\n",
-		tr.name, tr.schemaP, cdc_e.Schema, tr.tableP, cdc_e.Table)
+	log.Debugf(
+		"[%s] transform. rule-name: %s, match-schema: %s, event-schema: %s, match-table: %s, event-table: %s",
+		cdc_e.Meta.Pipeline,
+		tr.name,
+		tr.schemaP.String(),
+		cdc_e.Schema,
+		tr.tableP.String(),
+		cdc_e.Table,
+	)
 
 	if tr.schemaP.MatchString(cdc_e.Schema) && tr.tableP.MatchString(cdc_e.Table) {
-		fmt.Println(" === must apply: true")
+		log.Debug("must apply: true")
+
+		vm := tr.runtime
+		tFunc, ok := goja.AssertFunction(vm.Get("transform"))
+		if !ok {
+			log.Errorf("no 'transform' function found in the script")
+			return fmt.Errorf("'transform' function not found. rule=%s", tr.name)
+		}
+
+		//ignoring the return from transform script here
+		_, err := tFunc(goja.Undefined(), vm.ToValue(cdc_e))
+		if err != nil {
+			log.Error(fmt.Sprintf("[%s] transform error: %s", cdc_e.Meta.Pipeline, err))
+			return err
+		}
 	}
+
 	return nil
 }

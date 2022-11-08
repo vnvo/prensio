@@ -27,12 +27,18 @@ exclude_tables = [
 [[transform_rule]]
 name = "generic"
 match_schema = "test_.*"
-match_table = "table_1"
+match_table = "test_.*"
 transform_func = """
 function transform(cdc_event) {
-    if cdc_event.username.length > 3 {
-        cdc_event.username.replace('test', 'oooweee')
-    }
+    cdc_event.ext = 1
+    cdc_event.after.forEach((el) => {
+        el.changed = 1
+
+        if (el.text_col.length > 3) {
+            el.text_col = tObfString(el.text_col)
+        }
+    });
+    return cdc_event
 }
 """
 
@@ -42,9 +48,7 @@ match_schema = "tenant_.*"
 match_table = "entity_1"
 transform_func = """
 function transform(cdc_event) {
-    if cdc_event.username.length > 5 {
-        cdc_event.username.replace('value', 'changed')
-    }
+}
 """
 
 [kafka_sink]
