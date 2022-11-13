@@ -31,11 +31,11 @@ match_table = "test_.*"
 transform_func = """
 function transform(cdc_event) {
     cdc_event.ext = 1
-    cdc_event.after.forEach((el) => {
-        el.changed = 1
+    cdc_event.after.forEach((e) => {
+        e.changed = 1
 
-        if (el.text_col.length > 3) {
-            el.text_col = tObfString(el.text_col)
+        if (e.text_col.length > 3) {
+            e.text_col = tObfString(e.text_col)
         }
     });
     return cdc_event

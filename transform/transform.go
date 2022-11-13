@@ -101,7 +101,7 @@ func (tr *rule) Apply(cdc_e *cdc_event.CDCEvent) error {
 		//ignoring the return from transform script here
 		_, err := tFunc(goja.Undefined(), vm.ToValue(cdc_e))
 		if err != nil {
-			log.Error(fmt.Sprintf("[%s] transform error: %s", cdc_e.Meta.Pipeline, err))
+			log.Errorf("[%s] transform error: %s", cdc_e.Meta.Pipeline, err)
 			return err
 		}
 	}

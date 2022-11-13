@@ -13,11 +13,11 @@ import (
 )
 
 type CDCPipeline struct {
-	name   string
-	config *config.CDCConfig
-	source mysql_source.MySQLBinlogSource
-	transf *transform.Transform
-
+	name       string
+	config     *config.CDCConfig
+	source     mysql_source.MySQLBinlogSource
+	transf     *transform.Transform
+	sink       *CDCKafkaSink
 	rawEventCh chan cdc_event.CDCEvent
 	wg         sync.WaitGroup
 }
@@ -37,7 +37,7 @@ func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
 		panic(err)
 	}
 
-	//create kafka sink
+	k := NewCDCKafkaSink(&config.KafkaSink)
 	//create state manager
 
 	return CDCPipeline{
@@ -45,6 +45,7 @@ func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
 		config,
 		mys,
 		trn,
+		k,
 		rawEventCh,
 		sync.WaitGroup{},
 	}
@@ -80,6 +81,9 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 		case e := <-cdc.rawEventCh:
 			cdc.transf.Apply(&e)
 			d, err := e.ToJson()
+
+			cdc.sink.Write([]cdc_event.CDCEvent{e}, ctx)
+
 			log.Debugf("after transform == json:%v - err:%v", d, err)
 		case <-ctx.Done():
 			return
