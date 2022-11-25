@@ -97,7 +97,7 @@ func (ts *TestState) InsertAndReadOne(query string, kafkaTopic string) (*mysql.R
 		return nil, nil, err
 	}
 
-	kReader, err := ts.newKafkaReader(kafkaTopic)
+	kReader, _ := ts.newKafkaReader(kafkaTopic)
 	msg, err := kReader.ReadMessage(context.Background())
 	if err != nil {
 		return nil, nil, err

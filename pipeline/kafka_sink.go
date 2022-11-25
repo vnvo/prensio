@@ -7,8 +7,8 @@ import (
 
 	"github.com/segmentio/kafka-go"
 	"github.com/siddontang/go-log/log"
-	"github.com/vnvo/go-mysql-kafka/cdc_event"
 	"github.com/vnvo/go-mysql-kafka/config"
+	"github.com/vnvo/go-mysql-kafka/pipeline/cdc_event"
 )
 
 type CDCKafkaSink struct {
