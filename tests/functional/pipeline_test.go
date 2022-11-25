@@ -3,81 +3,63 @@ package test
 import (
 	"context"
 	"fmt"
-	"os"
+	"strings"
 	"testing"
+	"time"
 
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/stretchr/testify/assert"
+	"github.com/vnvo/go-mysql-kafka/config"
+	"github.com/vnvo/go-mysql-kafka/pipeline"
 )
 
-const (
-	dbUser = "root"
-	dbPass = "root"
-	dbName = "main_test"
-)
+func TestSimplePipelineSetupIsSuccessful(t *testing.T) {
+	time.Sleep(time.Second * 5)
+	c := config.NewCDCConfig(testState.SeedPath + "/../test_confs/simple_test.toml")
+	fmt.Println(c)
 
-type mysqlContainer struct {
-	container testcontainers.Container
-	URI       string
-}
+	c.Mysql.Addr = fmt.Sprintf("localhost:%d", testState.MysqlPort)
+	c.KafkaSink.Addr = strings.Join(testState.GetAllKafkaBrokers(), ",")
 
-func setupMySQL(ctx context.Context) (*mysqlContainer, error) {
-	seedPath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
+	p := pipeline.NewCDCPipeline("simple-test", &c)
 
-	contextPath := seedPath + "/.."
-	fmt.Println(contextPath)
-
-	req := testcontainers.ContainerRequest{
-		FromDockerfile: testcontainers.FromDockerfile{
-			Context:    contextPath,
-			Dockerfile: "Dockerfile.test_db",
-		},
-		WaitingFor: wait.ForLog("/usr/sbin/mysqld: ready for connections"),
-	}
-
-	mysqlC, err := testcontainers.GenericContainer(
-		ctx, testcontainers.GenericContainerRequest{
-			ContainerRequest: req,
-			Started:          true,
-		})
-
-	if err != nil {
-		panic(err)
-	}
-
-	host, _ := mysqlC.Host(ctx)
-	p, _ := mysqlC.MappedPort(ctx, "6606/tcp")
-	port := p.Int()
-
-	var connUri = "%s:%s@tcp(%s:%d)/%s?tls=skip-verify&amp;parseTime=true&amp;multiStatement=true"
-	connString := fmt.Sprintf(connUri, dbUser, dbPass, host, port, dbName)
-
-	return &mysqlContainer{
-		mysqlC,
-		connString,
-	}, nil
-
-}
-
-func TestMain(m *testing.M) {
-	fmt.Println("starting the test")
+	p.Init()
 	ctx := context.Background()
+	go func() {
+		p.Run(ctx)
+	}()
 
-	//setup mysql
-	mysqlC, err := setupMySQL(ctx)
-	if err != nil {
-		panic(err)
+	ret, err := p.Query(
+		fmt.Sprintf("select schema_name from information_schema.schemata where schema_name = '%s' or schema_name = '%s'",
+			"to_be_ignored_db",
+			"test_mysql_ref_db_01",
+		),
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(ret.Values))
+
+	for _, row := range ret.Values {
+		for _, val := range row {
+			fmt.Println(val.Type, string(val.AsString()))
+		}
 	}
+	fmt.Println(ret.Values)
 
-	fmt.Println(mysqlC)
+	//insert into db
+	//read from kafka and validate
 
-	// make a connection
-	// insert some data
-	// validate the kafka message
+}
 
-	defer mysqlC.container.Terminate(ctx)
+func TestSimplePipelineEventIsSuccessful(t *testing.T) {
+	dbRet, kMsg, err := testState.InsertAndReadOne(
+		"insert into test_mysql_ref_db_01.test_ref_table_01 (int_col, text_col) values (1, 'test-value')",
+		"test_mysql_ref_db_01.test_ref_table_01",
+	)
+
+	assert.NoError(t, err, "failed to insert and receive on event")
+
+	fmt.Println(dbRet)
+	fmt.Println(kMsg.Topic)
+	fmt.Println(string(kMsg.Value))
 
 }

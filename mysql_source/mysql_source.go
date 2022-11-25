@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/mysql"
 	cdc "github.com/vnvo/go-mysql-kafka/cdc_event"
 	"github.com/vnvo/go-mysql-kafka/config"
 )
@@ -67,4 +68,8 @@ func (mys *MySQLBinlogSource) Run(ctx context.Context) error {
 
 func (mys *MySQLBinlogSource) Close() error {
 	return nil
+}
+
+func (mys *MySQLBinlogSource) Query(query string) (*mysql.Result, error) {
+	return mys.canal.Execute(query)
 }

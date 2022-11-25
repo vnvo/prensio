@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/siddontang/go-log/log"
@@ -35,6 +36,10 @@ type KafkaSink struct {
 	Addr           string `toml:"addr"`
 	Port           int16  `toml:"port"`
 	BatchSizeBytes int16  `toml:"batch_size_bytes"`
+}
+
+func (ks *KafkaSink) GetAddrList() []string {
+	return strings.Split(ks.Addr, ",")
 }
 
 type CDCConfig struct {

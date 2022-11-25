@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/siddontang/go-log/log"
@@ -16,7 +17,7 @@ type CDCKafkaSink struct {
 }
 
 func NewCDCKafkaSink(conf *config.KafkaSink) *CDCKafkaSink {
-	addrs := []string{"localhost:29092", "localhost:39092", "localhost:49092"}
+	addrs := conf.GetAddrList() // []string{"localhost:29092", "localhost:39092", "localhost:49092"}
 
 	k := kafka.Writer{
 		Addr:                   kafka.TCP(addrs...),
@@ -42,9 +43,16 @@ func (k *CDCKafkaSink) Write(msgs []cdc_event.CDCEvent, ctx context.Context) err
 		})
 	}
 
-	err := k.w.WriteMessages(ctx, kmsgs...)
-	if err != nil {
-		log.Errorf("write to kafka faild. %v", err)
+	for retry := 3; retry > 0; retry -= 1 {
+		err := k.w.WriteMessages(ctx, kmsgs...)
+		if err != nil {
+			log.Errorf("write to kafka faild. %v", err)
+			time.Sleep(time.Second)
+			continue
+		} else {
+			break
+		}
 	}
+
 	return nil
 }

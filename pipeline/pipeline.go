@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/siddontang/go-log/log"
 	"github.com/vnvo/go-mysql-kafka/cdc_event"
 	"github.com/vnvo/go-mysql-kafka/config"
@@ -91,4 +92,9 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 			//fmt.Println("just waiting for other channels ...")
 		}
 	}
+}
+
+func (cdc *CDCPipeline) Query(query string) (*mysql.Result, error) {
+	return cdc.source.Query(query)
+
 }

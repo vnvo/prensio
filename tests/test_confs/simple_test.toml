@@ -1,0 +1,29 @@
+[mysql]
+name = "simple-test-d"
+addr = "SHOULD-OVERRIDE"
+port = 1
+user = "root"
+pass = "root"
+server_id = 1
+
+[source_rules]
+include_schemas = [
+]
+
+exclude_schemas = [
+]
+
+include_tables = [
+]
+
+exclude_tables = [
+]
+
+[[transform_rule]]
+
+
+[kafka_sink]
+name = "simple-test-kafka"
+addr = "SHOULD-OVERRIDE"
+port = 1
+batch_size_bytes = 2048
