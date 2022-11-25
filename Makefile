@@ -4,5 +4,10 @@ build:
 run:
 	go run ./cmd/go-mysql-kafka/main.go
 
-test:
-	go test -v tests/functional/pipeline_test.go -run TestMain
+devenv:
+	docker compose -f ./docker-compose-devenv.yaml down
+	docker compose -f ./docker-compose-devenv.yaml up -d
+	docker compose -f ./docker-compose-devenv.yaml ps
+
+test-func:
+	go test -v ./...

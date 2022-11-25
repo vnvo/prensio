@@ -1,61 +1,80 @@
-version: '2'
+version: '3'
 services:
+  percona8-1:
+    container_name: percona8-1_$uid
+    image: percona/percona-server:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: "main_test"
+    volumes:
+      - ./db_setup/db_init/02-schemas.sql:/docker-entrypoint-initdb.d/02-schemas.sql
+      - ./db_setup/my-test.cnf:/etc/my.cnf.d/my-test.cnf
+    ports:
+      - $TEST_DB_PORT:3306
+  
   zookeeper-1:
+    container_name: zk_1_$uid
     image: confluentinc/cp-zookeeper:latest
+    depends_on:
+      - percona8-1
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - 22181:2181
-
+      - $TEST_ZK1_PORT:2181
   zookeeper-2:
+    container_name: zk_2_$uid
     image: confluentinc/cp-zookeeper:latest
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - 32181:2181
+      - $TEST_ZK2_PORT:2181
   
   kafka-1:
+    container_name: kafka_1_$uid
     image: confluentinc/cp-kafka:latest
     depends_on:
       - zookeeper-1
       - zookeeper-2
-
     ports:
-      - 29092:29092
+      - $TEST_KAFKA1_PORT:$TEST_KAFKA1_PORT
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://localhost:$TEST_KAFKA1_PORT
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
   kafka-2:
+    container_name: kafka_2_$uid
     image: confluentinc/cp-kafka:latest
     depends_on:
       - zookeeper-1
       - zookeeper-2
+      - kafka-1
     ports:
-      - 39092:39092
+      - $TEST_KAFKA2_PORT:$TEST_KAFKA2_PORT
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://localhost:39092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://localhost:$TEST_KAFKA2_PORT
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
   kafka-3:
+    container_name: kafka_3_$uid
     image: confluentinc/cp-kafka:latest
     depends_on:
       - zookeeper-1
       - zookeeper-2
+      - kafka-2
     ports:
-      - 49092:49092
+      - $TEST_KAFKA3_PORT:$TEST_KAFKA3_PORT
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://localhost:49092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://localhost:$TEST_KAFKA3_PORT
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
