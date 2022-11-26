@@ -9,21 +9,11 @@ import (
 	"testing"
 	"time"
 
-	//_ "github.com/go-sql-driver/mysql"
-	//"github.com/jmoiron/sqlx"
-
 	"github.com/go-mysql-org/go-mysql/client"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-)
-
-const (
-	DB_SRV_NAME      = "percona8-1"
-	KAFKA_SRV_NAME_1 = "kafka-1"
-	KAFKA_SRV_NAME_2 = "kafka-1"
-	KAFKA_SRV_NAME_3 = "kafka-1"
 )
 
 var testState *TestState
@@ -37,16 +27,12 @@ func (g *TestLogConsumer) Accept(l tc.Log) {
 
 func setupTestEnv(ctx context.Context) {
 	testState = NewTestState()
-	fmt.Println("Test State: ", testState)
 	composePath := []string{testState.ComposePath}
 	fmt.Println(testState)
 
 	compose := tc.NewLocalDockerCompose(composePath, testState.TestUUID)
-
-	// add random ports for the containers external access to prevent conflicts on parallel runs
 	waitService := fmt.Sprintf("kafka_3_%s", testState.TestUUID)
-	waitPort := fmt.Sprintf("%d", testState.Kafka3Port)
-	fmt.Println(waitPort)
+
 	err := compose.
 		WithCommand([]string{"up", "-d"}).
 		WithEnv(map[string]string{
@@ -58,7 +44,7 @@ func setupTestEnv(ctx context.Context) {
 			"TEST_KAFKA2_PORT": strconv.Itoa(testState.Kafka2Port),
 			"TEST_KAFKA3_PORT": strconv.Itoa(testState.Kafka3Port),
 		}).
-		WaitForService(waitService, wait.ForExposedPort()).
+		WaitForService(waitService, wait.ForLog("started (kafka.server.KafkaServer)")).
 		Invoke()
 
 	if err.Error != nil {
@@ -66,13 +52,13 @@ func setupTestEnv(ctx context.Context) {
 		panic(err.Error)
 	}
 
-	fmt.Println(compose.Services)
 	testState.Compose = compose
 }
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 	setupTestEnv(ctx)
+
 	time.Sleep(time.Second * 3)
 	status := m.Run()
 	testState.Compose.Down()
@@ -81,8 +67,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestMysqlContainerIsReachable(t *testing.T) {
+	t.Log(testState)
 	Addr := fmt.Sprintf("localhost:%d", testState.MysqlPort)
-	fmt.Println(Addr)
+	t.Log(Addr)
 	dbConn, err := client.Connect(
 		testState.GetDBAddr(),
 		testState.DBUser, testState.DBPass,
@@ -102,14 +89,13 @@ func TestKafkaBrokersAreReachable(t *testing.T) {
 }
 
 func TestKafkaControllerBrokerIsAvailable(t *testing.T) {
-
 	addrs := testState.GetAllKafkaBrokers()
 	conn, err := kafka.Dial("tcp", addrs[1])
 	assert.NoError(t, err)
 
 	controller, err := conn.Controller()
 	assert.NoError(t, err)
-	fmt.Println(controller)
+	t.Log(controller)
 
 	topic := "test-topic"
 
@@ -134,13 +120,9 @@ func TestKafkaControllerBrokerIsAvailable(t *testing.T) {
 
 	partitions, err := controllerConn.ReadPartitions()
 	assert.NoError(t, err)
-	m := map[string]struct{}{}
 
 	for _, p := range partitions {
-		m[p.Topic] = struct{}{}
-	}
-	for k := range m {
-		fmt.Println(k)
+		t.Logf("available topic: %s", p.Topic)
 	}
 
 	conn.Close()

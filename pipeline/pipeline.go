@@ -27,7 +27,6 @@ func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
 
 	rawEventCh := make(chan cdc_event.CDCEvent)
 
-	//create mysql source
 	mys, err := mysql_source.NewMySQLBinlogSource(config, rawEventCh)
 	if err != nil {
 		panic(err)
@@ -54,7 +53,6 @@ func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
 
 func (cdc *CDCPipeline) Init() error {
 	cdc.source.Init()
-
 	return nil
 }
 
@@ -88,13 +86,11 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 			log.Debugf("after transform == json:%v - err:%v", d, err)
 		case <-ctx.Done():
 			return
-		case <-time.After(time.Second * 1):
-			//fmt.Println("just waiting for other channels ...")
+		case <-time.After(time.Millisecond * 100):
 		}
 	}
 }
 
 func (cdc *CDCPipeline) Query(query string) (*mysql.Result, error) {
 	return cdc.source.Query(query)
-
 }

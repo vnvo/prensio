@@ -13,9 +13,9 @@ import (
 )
 
 func TestSimplePipelineSetupIsSuccessful(t *testing.T) {
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 3)
 	c := config.NewCDCConfig(testState.SeedPath + "/../test_confs/simple_test.toml")
-	fmt.Println(c)
+	t.Log(c)
 
 	c.Mysql.Addr = fmt.Sprintf("localhost:%d", testState.MysqlPort)
 	c.KafkaSink.Addr = strings.Join(testState.GetAllKafkaBrokers(), ",")
@@ -40,10 +40,10 @@ func TestSimplePipelineSetupIsSuccessful(t *testing.T) {
 
 	for _, row := range ret.Values {
 		for _, val := range row {
-			fmt.Println(val.Type, string(val.AsString()))
+			t.Log(val.Type, string(val.AsString()))
 		}
 	}
-	fmt.Println(ret.Values)
+	t.Log(ret.Values)
 
 	//insert into db
 	//read from kafka and validate
@@ -58,8 +58,8 @@ func TestSimplePipelineEventIsSuccessful(t *testing.T) {
 
 	assert.NoError(t, err, "failed to insert and receive on event")
 
-	fmt.Println(dbRet)
-	fmt.Println(kMsg.Topic)
-	fmt.Println(string(kMsg.Value))
+	t.Log(dbRet)
+	t.Log(kMsg.Topic)
+	t.Log(string(kMsg.Value))
 
 }

@@ -69,10 +69,6 @@ func (ts *TestState) GetDBAddr() string {
 	return fmt.Sprintf("localhost:%d", ts.MysqlPort)
 }
 
-func (ts *TestState) GetKafkaAddrRandom() string {
-	return fmt.Sprintf("localhost:%d", ts.Kafka1Port)
-}
-
 func (ts *TestState) GetAllKafkaBrokers() []string {
 	return []string{
 		fmt.Sprintf("localhost:%d", ts.Kafka1Port),
@@ -107,7 +103,6 @@ func (ts *TestState) InsertAndReadOne(query string, kafkaTopic string) (*mysql.R
 }
 
 func (ts *TestState) newKafkaReader(topic string) (*kafka.Reader, error) {
-	fmt.Println("Test Kafka Brokers: ", ts.GetAllKafkaBrokers())
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  ts.GetAllKafkaBrokers(),
 		Topic:    topic,
