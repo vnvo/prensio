@@ -33,6 +33,12 @@ type TestState struct {
 	Compose     *tc.LocalDockerCompose
 }
 
+type kLogger struct{}
+
+func (*kLogger) Printf(msg string, params ...interface{}) {
+	fmt.Printf(msg, params...)
+}
+
 func NewTestState() *TestState {
 	rand.Seed(time.Now().UnixNano())
 	min := 15000
@@ -94,7 +100,12 @@ func (ts *TestState) InsertAndReadOne(query string, kafkaTopic string) (*mysql.R
 	}
 
 	kReader, _ := ts.newKafkaReader(kafkaTopic)
+	defer kReader.Close()
+
+	fmt.Println("read start", time.Now().Local())
 	msg, err := kReader.ReadMessage(context.Background())
+	fmt.Println("read end", time.Now().Local())
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -104,10 +115,8 @@ func (ts *TestState) InsertAndReadOne(query string, kafkaTopic string) (*mysql.R
 
 func (ts *TestState) newKafkaReader(topic string) (*kafka.Reader, error) {
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  ts.GetAllKafkaBrokers(),
-		Topic:    topic,
-		MinBytes: 10e3, // 10KB
-		MaxBytes: 10e6, // 10MB
+		Brokers: ts.GetAllKafkaBrokers(),
+		Topic:   topic,
 	})
 
 	return r, nil
