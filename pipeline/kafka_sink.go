@@ -47,7 +47,7 @@ func (k *CDCKafkaSink) Write(msgs []cdc_event.CDCEvent, ctx context.Context) err
 		err := k.w.WriteMessages(ctx, kmsgs...)
 		if err != nil {
 			log.Errorf("write to kafka faild(try %d of 3). %v", retry, err)
-			time.Sleep(time.Second)
+			time.Sleep(time.Millisecond * 100)
 			continue
 		} else {
 			break
