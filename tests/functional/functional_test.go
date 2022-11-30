@@ -57,8 +57,8 @@ func setupTestEnv(ctx context.Context) {
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
-	setupTestEnv(ctx)
 
+	setupTestEnv(ctx)
 	time.Sleep(time.Second * 3)
 	status := m.Run()
 	testState.Compose.Down()

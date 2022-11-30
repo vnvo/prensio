@@ -2,7 +2,9 @@ package test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -50,16 +52,26 @@ func TestSimplePipelineSetupIsSuccessful(t *testing.T) {
 
 }
 
-func TestSimplePipelineEventIsSuccessful(t *testing.T) {
-	dbRet, kMsg, err := testState.InsertAndReadOne(
-		"insert into test_mysql_ref_db_01.test_ref_table_01 (int_col, text_col) values (1, 'test-value')",
-		"test_mysql_ref_db_01.test_ref_table_01",
+func TestSimplePipelineEventIsDelivered(t *testing.T) {
+	table := "test_mysql_ref_db_01.test_ref_table_01"
+	randomInt := rand.Intn(10) + 1
+	randomText := fmt.Sprintf("test-value-%d", randomInt)
+	q := fmt.Sprintf(
+		"insert into %s (int_col, text_col) values (%d, '%s')",
+		table, randomInt, randomText,
 	)
 
-	assert.NoError(t, err, "failed to insert and receive on event")
+	_, kMsg, err := testState.InsertAndReadOne(
+		q,
+		table,
+	)
 
-	t.Log(dbRet)
+	assert.NoError(t, err, "failed to insert and receive one event", err)
+
+	payload := map[string]interface{}{}
+	err = json.Unmarshal(kMsg.Value, &payload)
+	assert.NoError(t, err, "decoding message payload to json failed")
+
 	t.Log(kMsg.Topic)
 	t.Log(string(kMsg.Value))
-
 }
