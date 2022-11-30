@@ -12,7 +12,7 @@ to provide a simple yet flexible [Change Data Capture](https://en.wikipedia.org/
  - [ ] Simple to config and use
  - [ ] REST APIs to manage the runtime
  - [ ] Resilient to failures from both ends
- - [ ] Cloud ready (k8s, aws, ...)
+ - [ ] Cloud ready
   Jump to **How to Use**
 
 ## Components
@@ -69,11 +69,7 @@ If you are interested in a more mature solution with a sizeable community you sh
 
   
 ### Why use go-mysql-kafka then
-- go-mysql-kafka is way more flexible when it comes to data transformation requirements. If you can imagine it in javascript, you can do it.
-- This tools is more resource efficient
-- go-mysql-kafka is intended for cloud native deployments which mean it's easier to setup and use
-- [add more]
-
+[TBD]
   
 
 ## How to Use
