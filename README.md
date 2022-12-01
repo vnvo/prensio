@@ -17,6 +17,7 @@ to provide a simple yet flexible [Change Data Capture](https://en.wikipedia.org/
 
 ## Components
 The components of this system are:
+![Components](/docs/go-mysql-kafka-components.png?raw=true "Components")
 
 ### Pipeline
 The high level construct to manage the flow of events from a source (mysql) to a sink (kafka). Pipeline(s) are created at startup using the supplied configuration files but you can use the REST APIs to build automation and dynamically manage the pipelines at runtime.
