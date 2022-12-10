@@ -9,5 +9,5 @@ devenv:
 	docker compose -f ./docker-compose-devenv.yaml up -d
 	docker compose -f ./docker-compose-devenv.yaml ps
 
-test-func:
-	go test -v ./...
+test:
+	~/go/bin/ginkgo --fail-fast -vv run pipeline
