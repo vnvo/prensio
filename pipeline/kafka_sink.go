@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -31,6 +32,10 @@ func NewCDCKafkaSink(conf *config.KafkaSink) *CDCKafkaSink {
 	}
 }
 
+func (k *CDCKafkaSink) Close() {
+	k.w.Close()
+}
+
 func (k *CDCKafkaSink) Write(msgs []cdc_event.CDCEvent, ctx context.Context) error {
 	kmsgs := []kafka.Message{}
 
@@ -43,13 +48,19 @@ func (k *CDCKafkaSink) Write(msgs []cdc_event.CDCEvent, ctx context.Context) err
 		})
 	}
 
-	for retry := 1; retry <= 3; retry += 1 {
+	for retry := 1; retry <= 5; retry += 1 {
 		err := k.w.WriteMessages(ctx, kmsgs...)
 		if err != nil {
 			log.Errorf("write to kafka faild(try %d of 3). %v", retry, err)
-			time.Sleep(time.Millisecond * 100)
+			if strings.HasPrefix(err.Error(), "[5] Leader Not Available") {
+				time.Sleep(time.Second * 3)
+			} else {
+				time.Sleep(time.Millisecond * 500)
+			}
+			log.Info("kafka next try ...")
 			continue
 		} else {
+			log.Info("kafka write successful")
 			break
 		}
 	}

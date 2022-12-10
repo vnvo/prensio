@@ -74,6 +74,12 @@ func (cdc *CDCPipeline) Run(ctx context.Context) error {
 	return nil
 }
 
+func (cdc *CDCPipeline) Close() {
+	cdc.source.Close()
+	cdc.sink.Close()
+	cdc.wg.Done()
+}
+
 func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 	for {
 		select {
