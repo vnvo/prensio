@@ -66,8 +66,8 @@ func (mys *MySQLBinlogSource) Run(ctx context.Context) error {
 	return nil
 }
 
-func (mys *MySQLBinlogSource) Close() error {
-	return nil
+func (mys *MySQLBinlogSource) Close() {
+	mys.canal.Close()
 }
 
 func (mys *MySQLBinlogSource) Query(query string) (*mysql.Result, error) {
