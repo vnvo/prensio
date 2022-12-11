@@ -66,7 +66,7 @@ func NewTestContext() *TestContext {
 		SeedPath: seedPath,
 		TestUUID: uid,
 
-		ComposePath: seedPath + "/../tests/docker-compose-testenv.yaml",
+		ComposePath: seedPath + "/../docker-compose-testenv.yaml",
 		Compose:     nil,
 	}
 }
