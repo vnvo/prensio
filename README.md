@@ -13,11 +13,12 @@ Is simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Chang
  - [ ] REST APIs to manage the runtime
  - [ ] Resilient to failures from both ends
  - [ ] Cloud ready
+
   Jump to **How to Use**
 
 ## Components
 The components of this system are:
-![Components](/docs/go-mysql-kafka-components.png?raw=true "Components")
+![Components](/docs/prensio-components.png?raw=true "Components")
 
 ### Pipeline
 The high level construct to manage the flow of events from a source (mysql) to a sink (kafka). Pipeline(s) are created at startup using the supplied configuration files but you can use the REST APIs to build automation and dynamically manage the pipelines at runtime.

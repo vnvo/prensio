@@ -49,10 +49,14 @@ type CDCConfig struct {
 	KafkaSink      KafkaSink         `toml:"kafka_sink"`
 }
 
-func NewCDCConfig(path string) CDCConfig {
+func NewCDCConfig(path string) (CDCConfig, error) {
 	var conf CDCConfig
 
 	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return conf, err
+	}
+
 	log.Debugf("config. data: \n%s - err:%v\n", data, err)
 	err = toml.Unmarshal(data, &conf)
 
@@ -60,5 +64,5 @@ func NewCDCConfig(path string) CDCConfig {
 		panic(err)
 	}
 
-	return conf
+	return conf, nil
 }

@@ -7,8 +7,8 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: "main_test"
     volumes:
-      - ./db_setup/db_init/02-schemas.sql:/docker-entrypoint-initdb.d/02-schemas.sql
-      - ./db_setup/my-test.cnf:/etc/my.cnf.d/my-test.cnf
+      - ./sample_configs/db_setup/db_init/02-schemas.sql:/docker-entrypoint-initdb.d/02-schemas.sql
+      - ./sample_configs/db_setup/my-test.cnf:/etc/my.cnf.d/my-test.cnf
     ports:
       - $TEST_DB_PORT:3306
   

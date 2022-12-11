@@ -22,8 +22,12 @@ var _ = Describe("Pipeline", Ordered, func() {
 
 	BeforeAll(func() {
 		time.Sleep(time.Second)
-		cfg = config.NewCDCConfig(
-			testCtx.SeedPath + "/../tests/test_confs/simple_test.toml")
+		var err error
+		cfg, err = config.NewCDCConfig(
+			testCtx.SeedPath + "/../sample_configs/simple_test.toml")
+
+		Expect(err).Should(BeNil())
+
 		cfg.Mysql.Addr = testCtx.GetDBAddr()
 		cfg.KafkaSink.Addr = strings.Join(testCtx.GetAllKafkaBrokers(), ",")
 

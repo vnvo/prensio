@@ -12,12 +12,15 @@ import (
 func main() {
 	initLogger()
 
-	conf := config.NewCDCConfig("./go_mysql_kafka.toml")
+	conf, err := config.NewCDCConfig("./go_mysql_kafka.toml")
+	if err != nil {
+		panic(err)
+	}
 
 	myPipeline := pipeline.NewCDCPipeline("first-pipeline", &conf)
 	log.Infof("[%s] created.", "first-pipeline")
 
-	err := myPipeline.Init()
+	err = myPipeline.Init()
 	if err != nil {
 		panic(err)
 	}
