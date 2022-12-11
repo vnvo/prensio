@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
-	"github.com/vnvo/go-mysql-kafka/config"
-	cdc "github.com/vnvo/go-mysql-kafka/pipeline/cdc_event"
+	"github.com/vnvo/prensio/config"
+	cdc "github.com/vnvo/prensio/pipeline/cdc_event"
 )
 
 type MySQLBinlogSource struct {

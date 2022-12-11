@@ -1,8 +1,8 @@
 build:
-	go build -o bin/go-mysql-kafka ./cmd/go-mysql-kafka/main.go
+	go build -o bin/prensio ./cmd/prensio/main.go
 
 run:
-	go run ./cmd/go-mysql-kafka/main.go
+	go run ./cmd/prensio/main.go
 
 devenv:
 	docker compose -f ./docker-compose-devenv.yaml down

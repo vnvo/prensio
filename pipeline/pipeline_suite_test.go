@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	th "github.com/vnvo/go-mysql-kafka/test_helpers"
+	th "github.com/vnvo/prensio/test_helpers"
 )
 
 var testCtx *th.TestContext

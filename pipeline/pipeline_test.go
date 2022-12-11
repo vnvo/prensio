@@ -12,8 +12,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/segmentio/kafka-go"
-	"github.com/vnvo/go-mysql-kafka/config"
-	"github.com/vnvo/go-mysql-kafka/pipeline"
+	"github.com/vnvo/prensio/config"
+	"github.com/vnvo/prensio/pipeline"
 )
 
 var _ = Describe("Pipeline", Ordered, func() {

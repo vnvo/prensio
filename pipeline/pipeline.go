@@ -7,10 +7,10 @@ import (
 
 	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/siddontang/go-log/log"
-	"github.com/vnvo/go-mysql-kafka/config"
-	"github.com/vnvo/go-mysql-kafka/pipeline/cdc_event"
-	"github.com/vnvo/go-mysql-kafka/pipeline/mysql_source"
-	"github.com/vnvo/go-mysql-kafka/pipeline/transform"
+	"github.com/vnvo/prensio/config"
+	"github.com/vnvo/prensio/pipeline/cdc_event"
+	"github.com/vnvo/prensio/pipeline/mysql_source"
+	"github.com/vnvo/prensio/pipeline/transform"
 )
 
 type CDCPipeline struct {

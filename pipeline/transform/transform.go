@@ -6,8 +6,8 @@ import (
 
 	"github.com/dop251/goja"
 	"github.com/siddontang/go-log/log"
-	"github.com/vnvo/go-mysql-kafka/config"
-	"github.com/vnvo/go-mysql-kafka/pipeline/cdc_event"
+	"github.com/vnvo/prensio/config"
+	"github.com/vnvo/prensio/pipeline/cdc_event"
 )
 
 type Transform struct {

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vnvo/go-mysql-kafka/config"
-	"github.com/vnvo/go-mysql-kafka/pipeline"
+	"github.com/vnvo/prensio/config"
+	"github.com/vnvo/prensio/pipeline"
 )
 
 func TestSimplePipelineSetupIsSuccessful(t *testing.T) {

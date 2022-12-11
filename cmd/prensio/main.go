@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/siddontang/go-log/log"
-	"github.com/vnvo/go-mysql-kafka/config"
-	"github.com/vnvo/go-mysql-kafka/pipeline"
+	"github.com/vnvo/prensio/config"
+	"github.com/vnvo/prensio/pipeline"
 )
 
 func main() {

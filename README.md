@@ -1,6 +1,6 @@
 
-# go-mysql-kafka
-to provide a simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Change_data_capture) (CDC) tool. This tool collects mysql changes, runs a user supplied transformation function on them and pushes them into kafka. This tool is inspired by go-mysql-elasticsearch and debezium.
+# Prensio
+Is simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Change_data_capture) (CDC) tool. This tool collects mysql changes, runs a user supplied transformation logic on them and pushes them into kafka. This tool is inspired by go-mysql-elasticsearch and debezium.
 
 ## Status: WIP
 
@@ -68,8 +68,8 @@ The package to store and load the state of the pipline between restarts and as t
 ### Debezium or Maxwell
 If you are interested in a more mature solution with a sizeable community you should checkout debezium and maxwell at least.
 
-  
-### Why use go-mysql-kafka then
+
+### Why use Prensio
 [TBD]
   
 

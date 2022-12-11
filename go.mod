@@ -1,4 +1,4 @@
-module github.com/vnvo/go-mysql-kafka
+module github.com/vnvo/prensio
 
 go 1.18
 

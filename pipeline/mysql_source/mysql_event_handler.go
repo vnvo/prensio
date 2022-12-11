@@ -5,7 +5,7 @@ import (
 	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/go-mysql-org/go-mysql/replication"
 	"github.com/siddontang/go-log/log"
-	cdc "github.com/vnvo/go-mysql-kafka/pipeline/cdc_event"
+	cdc "github.com/vnvo/prensio/pipeline/cdc_event"
 )
 
 type eventHandler struct {
