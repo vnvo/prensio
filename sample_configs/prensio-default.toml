@@ -1,5 +1,5 @@
 [mysql]
-name = "company_db_1234"
+name = "tenant_db_1234"
 addr = "127.0.0.1:6033"
 port = 6033
 user = "root"
@@ -30,7 +30,6 @@ match_schema = "test_.*"
 match_table = "test_.*"
 transform_func = """
 function transform(cdc_event) {
-    cdc_event.ext = 1
     cdc_event.after.forEach((e) => {
         e.changed = 1
 
@@ -52,7 +51,7 @@ function transform(cdc_event) {
 """
 
 [kafka_sink]
-name = "kafka-company-db"
+name = "my-kafka-cluster"
 addr = "192.168.1.1"
 port = 9222
 batch_size_bytes = 2048
