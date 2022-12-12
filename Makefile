@@ -2,7 +2,7 @@ build:
 	go build -o bin/prensio ./cmd/prensio/main.go
 
 run:
-	go run ./cmd/prensio/main.go
+	go run ./cmd/prensio/main.go $(args)
 
 devenv:
 	docker compose -f ./docker-compose-devenv.yaml down
