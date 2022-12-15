@@ -1,6 +1,6 @@
 
 # Prensio
-Is simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Change_data_capture) (CDC) tool. This tool collects mysql changes, runs a user supplied transformation logic on them and pushes them into kafka. This tool is inspired by go-mysql-elasticsearch and debezium.
+Is a simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Change_data_capture) (CDC) tool. This tool collects mysql changes, runs a user supplied transformation logic on them and pushes them into kafka. This tool is inspired by go-mysql-elasticsearch and debezium.
 
 ## Status: WIP
 
