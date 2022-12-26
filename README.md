@@ -69,6 +69,18 @@ function transform(cdc_event) {
 Beside having helper functions in the script, If your use case requires extra processing, collecting data from external sources and anything that is not readily available, you can add extra helper/utility functions. Such functions are implemented in Go and are made available to the transform runtime.
 For examples see: [TBD]
 
+#### Prensio Event Schema
+Pernsio events has this schema and this how structure for the **cdc_event passed to transform functions as well as the final kafka message**:
+|  Field | Type | Description  |
+| --- | --- | --- |
+| schema  | string | name of the mysql schema the event coming from |
+| table | string | table name for the mysql table the event coming from  |
+| action  | string | one of `insert`, `update`, `delete`  (always lowecase) |
+| before  | list of objects  | a list of old values for each affected row. every item is a object/map containing all columns and their value before the change |
+| after | list of objects | a list of new values for each affected row. every item is a object/map containing all columns and their value after the change |
+| meta | object | predefined map to carry extra data for each event. current items are `pipeline` (name of the prensio pipline producing the event) and `timstamp` (timestamp at which prensio started processing this event, in microseconds) |
+
+
 ### Kafka Sink
 Kafka client to produce the events. This can produce to multiple topics.
 #### Kafka Topic Creation
