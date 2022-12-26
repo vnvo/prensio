@@ -51,10 +51,10 @@ your transform script can be as extensive as you want it to be, to the full exte
 **tObfString** is a user defined transformer, defined as a Go function which is made available to the transform function. Read the next section.
 #### After Transform Action
 Transform functions can decide the fate of the individual events. At the moment these actions are supported:
-**ACTION_CONT**: to continue the processing after the transformation.
-**ACTION_DROP**: to drop the current event and pass the next event to the transform function.
-NB: Prensio checks the return value of the transform function aginst those constants.
+- **ACTION_CONT**: to continue the processing after the transformation.
+- **ACTION_DROP**: to drop the current event and pass the next event to the transform function.
 
+NB: Prensio checks the return value of the transform function aginst those constants. Your transform logic should return one of those values.
 You can make the decision based on the content of the event or other factors, for example:
 ```javascript
 function transform(cdc_event) {
