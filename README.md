@@ -1,6 +1,6 @@
 
 # Prensio
-Is a simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Change_data_capture) (CDC) tool. This tool collects mysql changes, runs a user supplied transformation logic on them and pushes them into kafka. This tool is inspired by go-mysql-elasticsearch and debezium.
+Is a simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Change_data_capture) (CDC) tool. This tool collects mysql changes (insert, update, delete), runs a user supplied transformation logic on them and writes the result into kafka. This tool is inspired by go-mysql-elasticsearch and debezium.
 
 ## Status: WIP
 
@@ -13,6 +13,7 @@ Is a simple yet flexible [Change Data Capture](https://en.wikipedia.org/wiki/Cha
  - [ ] REST APIs to manage the runtime
  - [ ] Resilient to failures from both ends
  - [ ] Cloud ready
+
 
   Jump to **How to Use**
 
@@ -32,14 +33,12 @@ The connector for mysql which reads the mysql binlog events. like go-mysql-elast
 The scriptable transformer using goja package. You will define a transform function which will receive the event as the input and can manipulate it. Example:
 ```javascript
 function transform(cdc_event) {
-	cdc_event.ext = 1
 	cdc_event.after.forEach((e) => {
-		e.changed = 1
 		if (e.text_col.length > 3) {
 		e.text_col = tObfString(e.text_col)
 		}
 	});
-return cdc_event
+return ACTION_CONT
 }
 ```
 the provided script should always have a function with this signature.
@@ -50,6 +49,21 @@ function transform(cdc_event)
 [more details about the return value to indicate "drop" or "continue"]
 your transform script can be as extensive as you want it to be, to the full extent of ECMA 5.1.
 **tObfString** is a user defined transformer, defined as a Go function which is made available to the transform function. Read the next section.
+#### After Transform Action
+Transform functions can decide the fate of the individual events. At the moment these actions are supported:
+**ACTION_CONT**: to continue the processing after the transformation.
+**ACTION_DROP**: to drop the current event and pass the next event to the transform function.
+NB: Prensio checks the return value of the transform function aginst those constants.
+
+You can make the decision based on the content of the event or other factors, for example:
+```javascript
+function transform(cdc_event) {
+    if (cdc_event.after[0].text_col == "should-continue")
+        return ACTION_CONT
+
+    return ACTION_DROP
+}
+```
 
 #### User Defined Transformers
 Beside having helper functions in the script, If your use case requires extra processing, collecting data from external sources and anything that is not readily available, you can add extra helper/utility functions. Such functions are implemented in Go and are made available to the transform runtime.

@@ -3,6 +3,7 @@ package pipeline_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -16,7 +17,7 @@ import (
 	"github.com/vnvo/prensio/pipeline"
 )
 
-var _ = Describe("Pipeline", Ordered, func() {
+var _ = Describe("Pipeline Simple", Ordered, func() {
 	var p pipeline.CDCPipeline
 	var cfg config.CDCConfig
 
@@ -104,7 +105,7 @@ var _ = Describe("Pipeline", Ordered, func() {
 
 				GinkgoWriter.Println("injecting change ...")
 
-				_, kMsg, err := testCtx.InsertAndReadOne(
+				_, kMsg, err := testCtx.ChangeAndReadOne(
 					q,
 					table,
 				)
@@ -131,6 +132,90 @@ var _ = Describe("Pipeline", Ordered, func() {
 
 			})
 		})
+	})
+
+})
+
+var _ = Describe("Pipeline Simple Transformation", Ordered, func() {
+	var p pipeline.CDCPipeline
+	var cfg config.CDCConfig
+
+	BeforeAll(func() {
+		time.Sleep(time.Second)
+		var err error
+		cfg, err = config.NewCDCConfig(
+			testCtx.SeedPath + "/../sample_configs/simple_transform_test.toml")
+
+		Expect(err).Should(BeNil())
+
+		cfg.Mysql.Addr = testCtx.GetDBAddr()
+		cfg.KafkaSink.Addr = strings.Join(testCtx.GetAllKafkaBrokers(), ",")
+
+		p = pipeline.NewCDCPipeline("simple-transform-test", &cfg)
+		p.Init()
+		ctx := context.Background()
+		go func() {
+			p.Run(ctx)
+		}()
+
+		time.Sleep(time.Second * 3)
+
+	})
+
+	AfterAll(func() {
+		p.Close()
+	})
+
+	Describe("when setup is done", func() {
+		Context("and transformation function is defined", func() {
+			var (
+				payload    map[string]interface{}
+				randomInt  int
+				randomText string
+			)
+
+			It("delivers the event by default", func() {
+				table := "test_mysql_ref_db_01.test_ref_table_01"
+				randomInt = rand.Intn(10) + 1
+				q := fmt.Sprintf(
+					"insert into %s (int_col, text_col) values (%d, '%s')",
+					table, randomInt, "should-continue",
+				)
+
+				GinkgoWriter.Println("injecting change ...")
+
+				_, kMsg, err := testCtx.ChangeAndReadOne(
+					q,
+					table,
+				)
+
+				Expect(err).Should(BeNil())
+				payload = map[string]interface{}{}
+				err = json.Unmarshal(kMsg.Value, &payload)
+				Expect(err).Should(BeNil())
+				GinkgoWriter.Println("test event payload:", payload)
+			})
+
+			It("transform can decide to discard a message", func() {
+				table := "test_mysql_ref_db_01.test_ref_table_01"
+				randomInt = rand.Intn(10) + 1
+				randomText = fmt.Sprintf("test-value-%d", randomInt)
+				q := fmt.Sprintf(
+					"insert into %s (int_col, text_col) values (%d, '%s')",
+					table, randomInt, randomText,
+				)
+
+				GinkgoWriter.Println("injecting change ...")
+
+				_, _, err := testCtx.ChangeAndReadOne(
+					q,
+					table,
+				)
+
+				Expect(errors.Is(err, context.DeadlineExceeded)).Should(Equal(true))
+			})
+		})
+
 	})
 
 })

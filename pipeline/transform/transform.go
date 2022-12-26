@@ -3,11 +3,18 @@ package transform
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/dop251/goja"
+	"github.com/pingcap/errors"
 	"github.com/siddontang/go-log/log"
 	"github.com/vnvo/prensio/config"
 	"github.com/vnvo/prensio/pipeline/cdc_event"
+)
+
+const (
+	ACTION_CONT = iota
+	ACTION_DROP
 )
 
 type Transform struct {
@@ -51,60 +58,89 @@ func NewTransform(conf *config.CDCConfig) (*Transform, error) {
 	return &Transform{&rules}, nil
 }
 
-func getTransformRuntime(ruleName string, transform_func string) *goja.Runtime {
-	log.Debugf("creating transformer runtime for: %s", ruleName)
+func getTransformRuntime(ruleName string, transformFunc string) *goja.Runtime {
+	log.Infof("creating transformer runtime for: %s, %v", ruleName, transformFunc)
+	if len(strings.TrimSpace(transformFunc)) == 0 {
+		log.Info("no transform func is provided, skipping ...")
+		return nil
+	}
+
 	vm := goja.New()
 
 	vm.SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
+	vm.Set("ACTION_DROP", ACTION_DROP)
+	vm.Set("ACTION_CONT", ACTION_CONT)
 	registerTransformers(vm)
 
-	_, err := vm.RunString(transform_func)
+	goja.MustCompile("", transformFunc, false)
+
+	_, err := vm.RunString(transformFunc)
 	if err != nil {
+		log.Error(err)
 		panic(err)
+	}
+
+	_, ok := goja.AssertFunction(vm.Get("transform"))
+	if !ok {
+		log.Errorf("no 'transform' function found in the script")
+		log.Error(transformFunc)
+		panic(ok)
 	}
 
 	return vm
 }
 
-func (t *Transform) Apply(cdc_e *cdc_event.CDCEvent) error {
+func (t *Transform) Apply(e *cdc_event.CDCEvent) (int, error) {
+	verdict := ACTION_CONT
+	var err error
+
 	for _, rule := range *t.rules {
-		err := rule.Apply(cdc_e)
+		verdict, err = rule.ApplyRule(e)
 		if err != nil {
-			return err
+			return verdict, errors.Errorf("rule=%s %s", rule.name, err)
+		}
+		if verdict == ACTION_DROP {
+			log.Info("dropping the event.")
+			return verdict, nil
 		}
 	}
 
-	return nil
+	return verdict, nil
 }
 
-func (tr *rule) Apply(cdc_e *cdc_event.CDCEvent) error {
+func (tr *rule) ApplyRule(e *cdc_event.CDCEvent) (int, error) {
 	log.Debugf(
 		"[%s] transform. rule-name: %s, match-schema: %s, event-schema: %s, match-table: %s, event-table: %s",
-		cdc_e.Meta.Pipeline,
+		e.Meta.Pipeline,
 		tr.name,
 		tr.schemaP.String(),
-		cdc_e.Schema,
+		e.Schema,
 		tr.tableP.String(),
-		cdc_e.Table,
+		e.Table,
 	)
 
-	if tr.schemaP.MatchString(cdc_e.Schema) && tr.tableP.MatchString(cdc_e.Table) {
+	if tr.runtime == nil {
+		return ACTION_CONT, nil
+	}
+
+	if tr.schemaP.MatchString(e.Schema) && tr.tableP.MatchString(e.Table) {
 		log.Debug("must apply: true")
 
 		vm := tr.runtime
 		tFunc, ok := goja.AssertFunction(vm.Get("transform"))
 		if !ok {
 			log.Errorf("no 'transform' function found in the script")
-			return fmt.Errorf("'transform' function not found. rule=%s", tr.name)
+			return 0, fmt.Errorf("'transform' function not found. rule=%s", tr.name)
 		}
 
-		//ignoring the return from transform script here
-		_, err := tFunc(goja.Undefined(), vm.ToValue(cdc_e))
+		verdict, err := tFunc(goja.Undefined(), vm.ToValue(e))
 		if err != nil {
-			log.Errorf("[%s] transform error: %s", cdc_e.Meta.Pipeline, err)
-			return err
+			log.Errorf("[%s] transform error: %s", e.Meta.Pipeline, err)
+			return 0, err
 		}
+
+		return int(verdict.Export().(int64)), nil
 	}
 
-	return nil
+	return 1, nil
 }

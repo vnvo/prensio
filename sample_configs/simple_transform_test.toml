@@ -1,0 +1,40 @@
+[mysql]
+name = "simple-transform-test"
+addr = "SHOULD-OVERRIDE"
+port = 1
+user = "root"
+pass = "root"
+server_id = 1
+
+[source_rules]
+include_schemas = [
+]
+
+exclude_schemas = [
+]
+
+include_tables = [
+]
+
+exclude_tables = [
+]
+
+[[transform_rule]]
+name = "generic-test-1"
+match_schema = "test_.*"
+match_table = "test_.*"
+transform_func = """
+function transform(cdc_event) {
+    if (cdc_event.after[0].text_col == "should-continue")
+        return ACTION_CONT
+
+    return ACTION_DROP
+}
+"""
+
+
+[kafka_sink]
+name = "simple-test-kafka"
+addr = "SHOULD-OVERRIDE"
+port = 1
+batch_size_bytes = 2048

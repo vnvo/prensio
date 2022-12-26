@@ -83,7 +83,7 @@ func (ts *TestContext) GetAllKafkaBrokers() []string {
 	}
 }
 
-func (ts *TestContext) InsertAndReadOne(query string, kafkaTopic string) (*mysql.Result, *kafka.Message, error) {
+func (ts *TestContext) ChangeAndReadOne(query string, kafkaTopic string) (*mysql.Result, *kafka.Message, error) {
 	dbConn, err := client.Connect(
 		ts.GetDBAddr(),
 		ts.DBUser, ts.DBPass,
@@ -93,19 +93,21 @@ func (ts *TestContext) InsertAndReadOne(query string, kafkaTopic string) (*mysql
 		return nil, nil, err
 	}
 
-	dbRet, err := dbConn.Execute(query)
+	kReader, _ := ts.newKafkaReader(kafkaTopic)
+	defer kReader.Close()
 
+	dbRet, err := dbConn.Execute(query)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	kReader, _ := ts.newKafkaReader(kafkaTopic)
-	defer kReader.Close()
+	time.Sleep(time.Microsecond * 500)
+	fmt.Printf("read start. offset=%d, time=%s\n", kReader.Offset(), time.Now().Local())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 
-	fmt.Println("read start", time.Now().Local())
-	msg, err := kReader.ReadMessage(context.Background())
+	msg, err := kReader.ReadMessage(ctx)
 	fmt.Println("read end", time.Now().Local())
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -118,6 +120,8 @@ func (ts *TestContext) newKafkaReader(topic string) (*kafka.Reader, error) {
 		Brokers: ts.GetAllKafkaBrokers(),
 		Topic:   topic,
 	})
+
+	r.SetOffset(kafka.LastOffset)
 
 	return r, nil
 }

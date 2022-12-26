@@ -75,6 +75,7 @@ func (cdc *CDCPipeline) Run(ctx context.Context) error {
 }
 
 func (cdc *CDCPipeline) Close() {
+	log.Info("closing the pipeline")
 	cdc.source.Close()
 	cdc.sink.Close()
 	cdc.wg.Done()
@@ -84,12 +85,19 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 	for {
 		select {
 		case e := <-cdc.rawEventCh:
-			cdc.transf.Apply(&e)
-			d, err := e.ToJson()
+			verdict, err := cdc.transf.Apply(&e)
+			if err != nil {
+				log.Errorf("transform failed: %v", err)
+				cdc.Close()
+				return
+			}
 
-			cdc.sink.Write([]cdc_event.CDCEvent{e}, ctx)
+			if verdict == transform.ACTION_CONT {
+				d, err := e.ToJson()
+				cdc.sink.Write([]cdc_event.CDCEvent{e}, ctx)
+				log.Debugf("after transform == json:%v - err:%v", d, err)
+			}
 
-			log.Debugf("after transform == json:%v - err:%v", d, err)
 		case <-ctx.Done():
 			return
 		case <-time.After(time.Millisecond * 100):

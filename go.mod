@@ -9,6 +9,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.5.1
 	github.com/onsi/gomega v1.24.1
 	github.com/pelletier/go-toml/v2 v2.0.5
+	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3
 	github.com/segmentio/kafka-go v0.4.38
 	github.com/siddontang/go-log v0.0.0-20180807004314-8d05993dda07
 	github.com/testcontainers/testcontainers-go v0.15.0
@@ -45,7 +46,6 @@ require (
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
-	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3 // indirect
 	github.com/pingcap/log v0.0.0-20210317133921-96f4fcab92a4 // indirect
 	github.com/pingcap/parser v0.0.0-20210415081931-48e7f467fd74 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
