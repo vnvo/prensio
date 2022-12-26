@@ -22,27 +22,27 @@ type CDCEventMeta struct {
 	Pipeline  string `json:"pipeline"`
 }
 
-func NewCDCEvent(raw_event *canal.RowsEvent) CDCEvent {
-	cdc_event := CDCEvent{
-		raw_event,
-		raw_event.Table.Schema,
-		raw_event.Table.Name,
-		raw_event.Action,
+func NewCDCEvent(rawEvent *canal.RowsEvent) CDCEvent {
+	cdcEvent := CDCEvent{
+		rawEvent,
+		rawEvent.Table.Schema,
+		rawEvent.Table.Name,
+		rawEvent.Action,
 		nil,
 		nil,
 		CDCEventMeta{time.Now().UnixMicro(), "test-pipeline"},
 	}
 
-	switch cdc_event.Action {
+	switch cdcEvent.Action {
 	case "insert":
-		cdc_event.handleInsert()
+		cdcEvent.handleInsert()
 	case "update":
-		cdc_event.handleUpdate()
+		cdcEvent.handleUpdate()
 	case "delete":
-		cdc_event.handleDelete()
+		cdcEvent.handleDelete()
 	}
 
-	return cdc_event
+	return cdcEvent
 }
 
 func (e *CDCEvent) handleInsert() {
