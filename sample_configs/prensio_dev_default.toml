@@ -36,6 +36,12 @@ function transform(cdc_event) {
         if (e.text_col == "ignore") {
             verdict = ACTION_DROP
         }
+
+        if (e.text_col == "change-kafka") {
+            cdc_event.kafka.topic = "another-topic"
+            cdc_event.kafka.key = "another-msg-key"
+        }
+
         if (e.text_col.length > 3) {
             e.text_col = tObfString(e.text_col)
         }

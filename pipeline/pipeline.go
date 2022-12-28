@@ -85,7 +85,9 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 	for {
 		select {
 		case e := <-cdc.rawEventCh:
+			tStart := time.Now().UnixMicro()
 			verdict, err := cdc.transf.Apply(&e)
+			log.Debugf("transform duration(us)=%d", time.Now().UnixMicro()-tStart)
 			if err != nil {
 				log.Errorf("transform failed: %v", err)
 				cdc.Close()
@@ -93,9 +95,11 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 			}
 
 			if verdict == transform.ACTION_CONT {
+				wStart := time.Now().UnixMicro()
 				d, err := e.ToJson()
 				cdc.sink.Write([]cdc_event.CDCEvent{e}, ctx)
-				log.Debugf("after transform == json:%v - err:%v", d, err)
+				log.Debugf("sink duration(us)=%d", time.Now().UnixMicro()-wStart)
+				log.Debugf("after transform ==\njson:%v\nerr:%v", d, err)
 			}
 
 		case <-ctx.Done():

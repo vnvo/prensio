@@ -96,11 +96,12 @@ func (t *Transform) Apply(e *cdc_event.CDCEvent) (int, error) {
 
 	for _, rule := range *t.rules {
 		verdict, err = rule.ApplyRule(e)
+		log.Debugf("verdict=%d", verdict)
 		if err != nil {
 			return verdict, errors.Errorf("rule=%s %s", rule.name, err)
 		}
 		if verdict == ACTION_DROP {
-			log.Info("dropping the event.")
+			log.Info("ACTION_DROP, dropping the event.")
 			return verdict, nil
 		}
 	}
@@ -139,8 +140,10 @@ func (tr *rule) ApplyRule(e *cdc_event.CDCEvent) (int, error) {
 			return 0, err
 		}
 
+		//verdict = verdict.Export().(int64)
 		return int(verdict.Export().(int64)), nil
 	}
 
-	return 1, nil
+	log.Debug("must apply: false")
+	return ACTION_CONT, nil
 }

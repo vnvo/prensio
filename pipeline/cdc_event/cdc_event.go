@@ -2,9 +2,12 @@ package cdc_event
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/siddontang/go-log/log"
 )
 
 type CDCEvent struct {
@@ -15,11 +18,17 @@ type CDCEvent struct {
 	Before []map[string]interface{} `json:"before"`
 	After  []map[string]interface{} `json:"after"`
 	Meta   CDCEventMeta             `json:"meta"`
+	Kafka  KafkaMeta                `json:"kafka"`
 }
 
 type CDCEventMeta struct {
 	Timestamp int64  `json:"timestamp"`
 	Pipeline  string `json:"pipeline"`
+}
+
+type KafkaMeta struct {
+	Topic string `json:"topic"`
+	Key   string `json:"key"`
 }
 
 func NewCDCEvent(rawEvent *canal.RowsEvent) CDCEvent {
@@ -31,6 +40,10 @@ func NewCDCEvent(rawEvent *canal.RowsEvent) CDCEvent {
 		nil,
 		nil,
 		CDCEventMeta{time.Now().UnixMicro(), "test-pipeline"},
+		KafkaMeta{
+			Topic: "",
+			Key:   "",
+		},
 	}
 
 	switch cdcEvent.Action {
@@ -42,7 +55,31 @@ func NewCDCEvent(rawEvent *canal.RowsEvent) CDCEvent {
 		cdcEvent.handleDelete()
 	}
 
+	cdcEvent.setKafkaTopicKey()
+
 	return cdcEvent
+}
+
+func (e *CDCEvent) setKafkaTopicKey() {
+	e.Kafka.Topic = fmt.Sprintf("%s.%s", e.Schema, e.Table)
+	if len(e.raw.Table.PKColumns) == 0 {
+		e.Kafka.Key = e.Kafka.Topic
+	} else {
+		kafkaKey := []string{}
+		valSource := e.Before
+		if e.Action == "insert" {
+			valSource = e.After
+		}
+
+		for _, pk := range e.raw.Table.PKColumns {
+			colName := e.raw.Table.Columns[pk].Name
+			kafkaKey = append(kafkaKey, valSource[0][colName].(string))
+		}
+
+		e.Kafka.Key = strings.Join(kafkaKey, ",")
+	}
+
+	log.Debugf("setKafkaTopicKey: key=%s, topic=%s", e.Kafka.Key, e.Kafka.Topic)
 }
 
 func (e *CDCEvent) handleInsert() {

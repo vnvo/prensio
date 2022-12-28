@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -24,6 +23,10 @@ func NewCDCKafkaSink(conf *config.KafkaSink) *CDCKafkaSink {
 		Addr:                   kafka.TCP(addrs...),
 		RequiredAcks:           1,
 		AllowAutoTopicCreation: true,
+		BatchTimeout:           time.Millisecond * 5,
+		WriteBackoffMin:        time.Millisecond * 5,
+		WriteBackoffMax:        time.Millisecond * 100,
+		BatchBytes:             10240,
 	}
 
 	return &CDCKafkaSink{
@@ -42,16 +45,17 @@ func (k *CDCKafkaSink) Write(msgs []cdc_event.CDCEvent, ctx context.Context) err
 	for _, msg := range msgs {
 		payload, _ := msg.ToJson()
 		kmsgs = append(kmsgs, kafka.Message{
-			Topic: fmt.Sprintf("%s.%s", msg.Schema, msg.Table),
-			Key:   []byte("cdc_event"),
+			Topic: msg.Kafka.Topic,
+			Key:   []byte(msg.Kafka.Key),
 			Value: []byte(payload),
 		})
 	}
 
+	var err error
 	for retry := 1; retry <= 5; retry += 1 {
-		err := k.w.WriteMessages(ctx, kmsgs...)
+		err = k.w.WriteMessages(ctx, kmsgs...)
 		if err != nil {
-			log.Errorf("write to kafka faild(try %d of 3). %v", retry, err)
+			log.Errorf("write to kafka faild(try %d of 5). %v", retry, err)
 			if strings.HasPrefix(err.Error(), "[5] Leader Not Available") {
 				time.Sleep(time.Second * 3)
 			} else {
@@ -60,10 +64,10 @@ func (k *CDCKafkaSink) Write(msgs []cdc_event.CDCEvent, ctx context.Context) err
 			log.Info("kafka next try ...")
 			continue
 		} else {
-			log.Info("kafka write successful")
-			break
+			log.Info("kafka write successful. duration=", time.Now().UnixMicro()-msgs[0].Meta.Timestamp)
+			return nil
 		}
 	}
 
-	return nil
+	return err
 }
