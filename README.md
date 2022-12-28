@@ -134,13 +134,15 @@ Dev env is defined in the `docker-compose-devenv.yaml`. To use this and run the 
 make devenv 
 ```
 ... and wait for the containers to be created. This will include a database and a kafka cluster of 3 brokers .
+
 Then you can run your local code agains that env using this command:
-```shell
+```console
 make rundev
 ```
 which will use the config file at path `sample_configs/prensio_dev_default.toml` by default.
+
 To run tests, run this command:
-```shell
+```console
 make test
 ```
 this will spin up a test env similar to dev env but coming from `docker-compose-testenv.yaml`. Container ports are allocated dynamically and you need to have **"ginkgo"** testing tool installed.
