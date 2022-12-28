@@ -144,14 +144,14 @@ var _ = Describe("Pipeline Simple Transformation", Ordered, func() {
 		time.Sleep(time.Second)
 		var err error
 		cfg, err = config.NewCDCConfig(
-			testCtx.SeedPath + "/../sample_configs/simple_transform_test.toml")
+			testCtx.SeedPath + "/../sample_configs/simple_test_transform.toml")
 
 		Expect(err).Should(BeNil())
 
 		cfg.Mysql.Addr = testCtx.GetDBAddr()
 		cfg.KafkaSink.Addr = strings.Join(testCtx.GetAllKafkaBrokers(), ",")
 
-		p = pipeline.NewCDCPipeline("simple-transform-test", &cfg)
+		p = pipeline.NewCDCPipeline("simple-test-transform", &cfg)
 		p.Init()
 		ctx := context.Background()
 		go func() {

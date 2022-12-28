@@ -30,14 +30,17 @@ match_schema = "test_.*"
 match_table = "test_.*"
 transform_func = """
 function transform(cdc_event) {
-    cdc_event.after.forEach((e) => {
-        e.changed = 1
+    verdict = ACTION_CONT
 
+    cdc_event.after.forEach((e) => {
+        if (e.text_col == "ignore") {
+            verdict = ACTION_DROP
+        }
         if (e.text_col.length > 3) {
             e.text_col = tObfString(e.text_col)
         }
     });
-    return cdc_event
+    return verdict
 }
 """
 
@@ -47,11 +50,10 @@ match_schema = "tenant_.*"
 match_table = "entity_1"
 transform_func = """
 function transform(cdc_event) {
+    return ACTION_DROP
 }
 """
 
 [kafka_sink]
 name = "my-kafka-cluster"
-addr = "192.168.1.1"
-port = 9222
-batch_size_bytes = 2048
+addr = "127.0.0.1:29092,127.0.0.1:39092,127.0.0.1:49092"
