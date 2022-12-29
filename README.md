@@ -5,7 +5,7 @@ Is a simple and flexible [Change Data Capture](https://en.wikipedia.org/wiki/Cha
 ## Status: WIP
 
 ## Features and Capabilities
- - [ ] Supports percona 8 and mysql 8
+ - [x] Supports Percona 8 and Mysql 8
  - [ ] Supports writing to multiple kafka clusters per pipeline
  - [x] Flexible transformation using a embedded javascript engine
  - [x] Low overhead and sub-millisecond processing per event on default settings
@@ -131,7 +131,7 @@ If js sandbox is not enough for your need, you can add custom helpers to fetch d
 - on the spot event enrichment
 - highly dynamic event distribution to different kafka clusters and topics
 
-On some not-so-reliable tests, the total time overheader of processing single change event was between 20 to 25 ms.
+On some not-so-reliable tests, the total overhead of processing single change event was between 20 to 25 ms.
 
 ## How to Use
 [TBD]
