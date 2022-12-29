@@ -76,7 +76,7 @@ func (e *CDCEvent) setKafkaTopicKey() {
 			kafkaKey = append(kafkaKey, valSource[0][colName].(string))
 		}
 
-		e.Kafka.Key = strings.Join(kafkaKey, ",")
+		e.Kafka.Key = strings.Join(kafkaKey, ".")
 	}
 
 	log.Debugf("setKafkaTopicKey: key=%s, topic=%s", e.Kafka.Key, e.Kafka.Topic)
