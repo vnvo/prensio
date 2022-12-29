@@ -31,7 +31,7 @@ Default behaviour of Prensio is summarizezd below. Please note that a big part t
 - Kafka topic: default value is `"{schema-name}[.]{table-name}"` for each event.
 - Kafka topic will be created if it doesn't exist
 - Kafka message key: 
--- If table has primary key, it will be `"{pk1}[.]{pk2}..."`, including all the columns that are part of the PK.
+-- If table has primary key, it will be a dot-separate list of all the columns that are part of the PK - `"{col1}[.]{col2}..."`.
 -- If not, it will be same as default kafka topic value.
 - Events are json encoded when produced to kafka
 - Transformer scripts are checked on startup and before any event processing. Any failure will be logged and Prensio will exit abnormally. 
