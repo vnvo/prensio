@@ -143,7 +143,7 @@ make devenv
 ```
 ... and wait for the containers to be created. This will include a database and a kafka cluster of 3 brokers .
 
-Then you can run your local code agains that env using this command:
+Then you can run your local code against that env using the command:
 ```console
 make rundev
 ```
