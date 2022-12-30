@@ -35,13 +35,8 @@ func main() {
 				},
 				Action: func(cCtx *cli.Context) error {
 					fmt.Println("conf:", cCtx.String("conf}"))
-					err := run(cCtx.String("conf"))
-					if err != nil {
-						msg := fmt.Sprintf("failed to run prensio: %s", err)
-						return cli.Exit(msg, 1)
-					}
-
-					return nil
+					run(cCtx.String("conf"))
+					return cli.Exit("", 0)
 				},
 			},
 		},
@@ -50,12 +45,12 @@ func main() {
 	app.Run(os.Args)
 }
 
-func run(cfgPath string) error {
+func run(cfgPath string) {
 	initLogger()
 
 	conf, err := config.NewCDCConfig(cfgPath)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	myPipeline := pipeline.NewCDCPipeline("first-pipeline", &conf)
@@ -68,8 +63,6 @@ func run(cfgPath string) error {
 
 	ctx := context.Background()
 	myPipeline.Run(ctx)
-
-	return nil
 }
 
 func initLogger() {
