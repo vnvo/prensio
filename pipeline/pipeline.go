@@ -16,6 +16,7 @@ import (
 type CDCPipeline struct {
 	name       string
 	config     *config.CDCConfig
+	state      *StateTracker
 	source     mysql_source.MySQLBinlogSource
 	transf     *transform.Transform
 	sink       *CDCKafkaSink
@@ -23,26 +24,33 @@ type CDCPipeline struct {
 	wg         sync.WaitGroup
 }
 
-func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
+func NewCDCPipeline(name string, conf *config.CDCConfig) CDCPipeline {
+
+	st, err := NewStateTracker(name, conf)
+	if err != nil {
+		log.Errorf("[%s] unable to track the state ... stopping.", name)
+		panic("state tracking failed")
+	}
 
 	rawEventCh := make(chan cdc_event.CDCEvent)
 
-	mys, err := mysql_source.NewMySQLBinlogSource(config, rawEventCh)
+	mys, err := mysql_source.NewMySQLBinlogSource(conf, rawEventCh)
 	if err != nil {
 		panic(err)
 	}
 
-	trn, err := transform.NewTransform(config)
+	trn, err := transform.NewTransform(conf)
 	if err != nil {
 		panic(err)
 	}
 
-	k := NewCDCKafkaSink(&config.KafkaSink)
+	k := NewCDCKafkaSink(&conf.KafkaSink)
 	//create state manager
 
 	return CDCPipeline{
 		name,
-		config,
+		conf,
+		st,
 		mys,
 		trn,
 		k,
@@ -52,7 +60,12 @@ func NewCDCPipeline(name string, config *config.CDCConfig) CDCPipeline {
 }
 
 func (cdc *CDCPipeline) Init() error {
-	cdc.source.Init()
+	lastState := cdc.state.State.Gtid
+	err := cdc.source.Init(lastState)
+	if err != nil {
+		panic(err)
+	}
+
 	return nil
 }
 
@@ -97,9 +110,21 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 			if verdict == transform.ACTION_CONT {
 				wStart := time.Now().UnixMicro()
 				d, err := e.ToJson()
-				cdc.sink.Write([]cdc_event.CDCEvent{e}, ctx)
-				log.Debugf("sink duration(us)=%d", time.Now().UnixMicro()-wStart)
-				log.Debugf("after transform ==\njson:%v\nerr:%v", d, err)
+				if err != nil {
+					log.Errorf(
+						"unable to convert to json ... stoppping. %s",
+						e.String(),
+					)
+					panic("unable to encode the event")
+				}
+
+				err = cdc.sink.Write([]cdc_event.CDCEvent{e}, ctx)
+				if err != nil {
+					panic("unable to write to kafka")
+				}
+				cdc.state.Save(e.GetGTID())
+				log.Debugf("read to sink duration(us)=%d", time.Now().UnixMicro()-wStart)
+				log.Debugf("===\n%s\n\nJSON: %v\n\nError: %v", e.String(), d, err)
 			}
 
 		case <-ctx.Done():

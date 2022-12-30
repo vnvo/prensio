@@ -5,18 +5,21 @@ import (
 
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/siddontang/go-log/log"
 	"github.com/vnvo/prensio/config"
 	cdc "github.com/vnvo/prensio/pipeline/cdc_event"
 )
 
 type MySQLBinlogSource struct {
-	config  *config.MySQLSourceConfig
-	canal   *canal.Canal
-	eventCh chan<- cdc.CDCEvent
+	fromGtid *mysql.GTIDSet
+	config   *config.MySQLSourceConfig
+	canal    *canal.Canal
+	eventCh  chan<- cdc.CDCEvent
 }
 
 func NewMySQLBinlogSource(config *config.CDCConfig, eventCh chan<- cdc.CDCEvent) (MySQLBinlogSource, error) {
 	mys := MySQLBinlogSource{
+		nil,
 		&config.Mysql,
 		nil,
 		eventCh,
@@ -50,19 +53,37 @@ func (mys *MySQLBinlogSource) prepareCanal() error {
 	}
 
 	mys.canal = new_canal
-	mys.canal.SetEventHandler(&eventHandler{mys})
+	mys.canal.SetEventHandler(&eventHandler{mys, nil})
 
 	return nil
 }
 
-func (mys *MySQLBinlogSource) Init() error {
+func (mys *MySQLBinlogSource) Init(lastState string) error {
+	mys.fromGtid = nil
+	if len(lastState) > 0 {
+		gtidSet, err := mysql.ParseGTIDSet("mysql", lastState)
+		if err != nil {
+			log.Errorf("[%s] failed to parse last state: %v", mys.config.Name, err)
+			return err
+		}
+
+		mys.fromGtid = &gtidSet
+	}
+
 	return nil
 }
 
 func (mys *MySQLBinlogSource) Run(ctx context.Context) error {
-	mys.canal.Run()
-	<-ctx.Done()
+	if mys.fromGtid != nil {
+		log.Info("starting binlog reader from GTID=%s", *mys.fromGtid)
+		mys.canal.StartFromGTID(*mys.fromGtid)
 
+	} else {
+		log.Info("starting binlog reader from the begining (first GTID available)")
+		mys.canal.Run()
+	}
+
+	<-ctx.Done()
 	return nil
 }
 

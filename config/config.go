@@ -38,6 +38,11 @@ type KafkaSink struct {
 	BatchSizeBytes int16  `toml:"batch_size_bytes"`
 }
 
+type StateTracking struct {
+	KafkaAddr string `toml:"kafka_addr"`
+	Topic     string `toml:"state_topic"`
+}
+
 func (ks *KafkaSink) GetAddrList() []string {
 	return strings.Split(ks.Addr, ",")
 }
@@ -47,6 +52,7 @@ type CDCConfig struct {
 	SourceRules    SourceRule        `toml:"source_rules"`
 	TransformRules []TransformRule   `toml:"transform_rule"`
 	KafkaSink      KafkaSink         `toml:"kafka_sink"`
+	State          StateTracking     `toml:"state_tracking"`
 }
 
 func NewCDCConfig(path string) (CDCConfig, error) {
