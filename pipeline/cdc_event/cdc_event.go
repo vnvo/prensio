@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/siddontang/go-log/log"
 )
 
 type CDCEvent struct {
+	gtid   *mysql.GTIDSet
 	raw    *canal.RowsEvent
 	Schema string                   `json:"schema"`
 	Table  string                   `json:"table"`
@@ -31,8 +33,9 @@ type KafkaMeta struct {
 	Key   string `json:"key"`
 }
 
-func NewCDCEvent(rawEvent *canal.RowsEvent) CDCEvent {
+func NewCDCEvent(rawEvent *canal.RowsEvent, gtid *mysql.GTIDSet) CDCEvent {
 	cdcEvent := CDCEvent{
+		gtid,
 		rawEvent,
 		rawEvent.Table.Schema,
 		rawEvent.Table.Name,
@@ -146,4 +149,23 @@ func (e *CDCEvent) ToJson() (string, error) {
 	}
 
 	return string(ej), nil
+}
+
+func (e *CDCEvent) String() string {
+	cols := []string{}
+	for _, c := range e.raw.Table.Columns {
+		cols = append(cols, fmt.Sprintf("%s (%s)", c.Name, c.RawType))
+	}
+	return fmt.Sprintf(
+		"CDC Event:\n\tGTID=%s\n\tschema.table=%s, pos=%d,\n\tcolumns=%s",
+		*e.gtid,
+		e.raw.Table.String(),
+		e.raw.Header.LogPos,
+		strings.Join(cols, ", "),
+	)
+}
+
+func (e *CDCEvent) GetGTID() string {
+	gtid := *e.gtid
+	return gtid.String()
 }

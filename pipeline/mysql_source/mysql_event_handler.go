@@ -9,7 +9,8 @@ import (
 )
 
 type eventHandler struct {
-	source *MySQLBinlogSource
+	source   *MySQLBinlogSource
+	lastGtid *mysql.GTIDSet
 }
 
 func (h *eventHandler) OnRotate(e *replication.RotateEvent) error {
@@ -38,12 +39,13 @@ func (h *eventHandler) OnXID(nextPos mysql.Position) error {
 }
 
 func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
-	h.source.eventCh <- cdc.NewCDCEvent(e)
+	h.source.eventCh <- cdc.NewCDCEvent(e, h.lastGtid)
 	return nil
 }
 
 func (h *eventHandler) OnGTID(gtid mysql.GTIDSet) error {
 	log.Debugf("OnGTID. %s", gtid.String())
+	h.lastGtid = &gtid
 	return nil
 }
 
