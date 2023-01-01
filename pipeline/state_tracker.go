@@ -31,7 +31,7 @@ func NewStateTracker(pname string, conf *config.CDCConfig) (*StateTracker, error
 		"",
 		topic,
 		&PipelineState{
-			"",
+			"fa632d10-864b-11ed-843e-0242c0a86002:27",
 			pname,
 			time.Now(),
 		},
@@ -52,12 +52,16 @@ func (st *StateTracker) init() error {
 	return nil
 }
 
-func (st *StateTracker) Load() (string, error) {
-	log.Debugf("[%s] locaing last GTID", st.Topic)
+func (st *StateTracker) load() (string, error) {
+	log.Debugf("[%s] loading last GTID", st.Topic)
 	return "", nil
 }
 
-func (st *StateTracker) Save(gtid string) error {
+func (st *StateTracker) save(gtid string) error {
 	log.Debugf("[%s] saving GTID=%s", st.Topic, gtid)
+	return nil
+}
+
+func (st *StateTracker) Close() error {
 	return nil
 }

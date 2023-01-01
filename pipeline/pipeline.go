@@ -122,7 +122,7 @@ func (cdc *CDCPipeline) readFromHandler(ctx context.Context) {
 				if err != nil {
 					panic("unable to write to kafka")
 				}
-				cdc.state.Save(e.GetGTID())
+				cdc.state.save(e.GetGTID())
 				log.Debugf("read to sink duration(us)=%d", time.Now().UnixMicro()-wStart)
 				log.Debugf("===\n%s\n\nJSON: %v\n\nError: %v", e.String(), d, err)
 			}
