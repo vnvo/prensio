@@ -95,7 +95,7 @@ Beside having helper functions in the script, If your use case requires extra pr
 For examples see: [TBD]
 
 #### Prensio Event Schema
-Pernsio events have this schema and this is the structure for the **cdc_event passed to transform functions as well as the final kafka message**:
+Prensio events have this schema and this is the structure for the **cdc_event passed to transform functions as well as the final kafka message**:
 |  Field | Type | Description  |
 | --- | --- | --- |
 | `schema`  | string | name of the mysql schema the event coming from |
