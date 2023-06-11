@@ -63,3 +63,7 @@ function transform(cdc_event) {
 [kafka_sink]
 name = "my-kafka-cluster"
 addr = "127.0.0.1:29092,127.0.0.1:39092,127.0.0.1:49092"
+
+[state_tracking]
+kafka_addr = "127.0.0.1:39092"
+state_topic = ""

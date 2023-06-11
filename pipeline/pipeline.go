@@ -60,8 +60,7 @@ func NewCDCPipeline(name string, conf *config.CDCConfig) CDCPipeline {
 }
 
 func (cdc *CDCPipeline) Init() error {
-	lastState := cdc.state.State.Gtid
-	err := cdc.source.Init(lastState)
+	err := cdc.source.Init(cdc.state.State.Gtid)
 	if err != nil {
 		panic(err)
 	}
@@ -91,6 +90,7 @@ func (cdc *CDCPipeline) Close() {
 	log.Info("closing the pipeline")
 	cdc.source.Close()
 	cdc.sink.Close()
+	cdc.state.close()
 	cdc.wg.Done()
 }
 
