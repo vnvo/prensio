@@ -13,7 +13,7 @@ type eventHandler struct {
 	lastGtid *mysql.GTIDSet
 }
 
-func (h *eventHandler) OnRotate(e *replication.RotateEvent) error {
+func (h *eventHandler) OnRotate(header *replication.EventHeader, e *replication.RotateEvent) error {
 	pos := mysql.Position{
 		Name: string(e.NextLogName),
 		Pos:  uint32(e.Position),
@@ -23,17 +23,17 @@ func (h *eventHandler) OnRotate(e *replication.RotateEvent) error {
 	return nil
 }
 
-func (h *eventHandler) OnTableChanged(schema, table string) error {
+func (h *eventHandler) OnTableChanged(header *replication.EventHeader, schema, table string) error {
 	log.Debugf("OnTableChanged. table: %s, schema: %s", schema, table)
 	return nil
 }
 
-func (h *eventHandler) OnDDL(nextPos mysql.Position, _ *replication.QueryEvent) error {
+func (h *eventHandler) OnDDL(header *replication.EventHeader, nextPos mysql.Position, _ *replication.QueryEvent) error {
 	log.Debugf("OnDLL. nextPos: %s", nextPos)
 	return nil
 }
 
-func (h *eventHandler) OnXID(nextPos mysql.Position) error {
+func (h *eventHandler) OnXID(header *replication.EventHeader, nextPos mysql.Position) error {
 	log.Debugf("OnXID. nextPosition.Name: %s, nextPosition.Pos: %d", nextPos.Name, nextPos.Pos)
 	return nil
 }
@@ -43,7 +43,7 @@ func (h *eventHandler) OnRow(e *canal.RowsEvent) error {
 	return nil
 }
 
-func (h *eventHandler) OnGTID(gtid mysql.GTIDSet) error {
+func (h *eventHandler) OnGTID(header *replication.EventHeader, gtid mysql.GTIDSet) error {
 	log.Debugf("OnGTID. %s", gtid.String())
 	h.lastGtid = &gtid
 	return nil
@@ -53,7 +53,7 @@ func (h *eventHandler) String() string {
 	return "DefaultMySQLEventHandler"
 }
 
-func (h *eventHandler) OnPosSynced(pos mysql.Position, set mysql.GTIDSet, force bool) error {
+func (h *eventHandler) OnPosSynced(header *replication.EventHeader, pos mysql.Position, set mysql.GTIDSet, force bool) error {
 	log.Debugf("OnPosSynced. pos=%v, set=%v, force=%v", pos, set, force)
 	return nil
 }
