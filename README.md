@@ -25,7 +25,7 @@ Is a simple and flexible [Change Data Capture](https://en.wikipedia.org/wiki/Cha
 ## Default Behaviour
 *NB: this can change before the first stable release.*
 Default behaviour of Prensio is summarizezd below. Please note that a big part these points are available to transform functions and can be overwritten on the fly (see Transformer):
-- Sequentional processing per pipeline. Change events are processes in the order they arrive from the source database.
+- Sequentional processing per pipeline. Change events are processed in the order they arrive from the source database.
 - Pipelines are independent processes.
 - On irrecoverable errors, prensio will log the error and will exit
 - Kafka topic: default value is `"{schema-name}[.]{table-name}"` for each event.
