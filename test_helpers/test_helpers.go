@@ -12,7 +12,7 @@ import (
 	"github.com/go-mysql-org/go-mysql/mysql"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
-	tc "github.com/testcontainers/testcontainers-go"
+	tc "github.com/testcontainers/testcontainers-go/modules/compose"
 )
 
 type TestContext struct {
