@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 
 	"github.com/siddontang/go-log/log"
 	"github.com/urfave/cli/v2"
-	"github.com/vnvo/prensio/config"
 	"github.com/vnvo/prensio/pipeline"
 )
 
@@ -48,21 +46,32 @@ func main() {
 func run(cfgPath string) {
 	initLogger()
 
-	conf, err := config.NewCDCConfig(cfgPath)
+	pm, err := pipeline.NewPipelineManager(cfgPath)
 	if err != nil {
 		panic(err)
 	}
 
-	myPipeline := pipeline.NewCDCPipeline("first-pipeline", &conf)
-	log.Infof("[%s] created.", "first-pipeline")
+	pm.Start()
 
-	err = myPipeline.Init()
-	if err != nil {
-		panic(err)
-	}
+	/*
 
-	ctx := context.Background()
-	myPipeline.Run(ctx)
+		//filepath.WalkDir(root string, fn WalkFunc)
+		conf, err := config.NewCDCConfig(cfgPath)
+		if err != nil {
+			panic(err)
+		}
+
+			myPipeline := pipeline.NewCDCPipeline("first-pipeline", &conf)
+			log.Infof("[%s] created.", "first-pipeline")
+
+			err = myPipeline.Init()
+			if err != nil {
+				panic(err)
+			}
+
+			ctx := context.Background()
+			myPipeline.Run(ctx)
+	*/
 }
 
 func initLogger() {

@@ -21,10 +21,10 @@ type CDCPipeline struct {
 	transf     *transform.Transform
 	sink       *CDCKafkaSink
 	rawEventCh chan cdc_event.CDCEvent
-	wg         sync.WaitGroup
+	wg         *sync.WaitGroup
 }
 
-func NewCDCPipeline(name string, conf *config.CDCConfig) CDCPipeline {
+func NewCDCPipeline(name string, conf *config.CDCConfig, wg *sync.WaitGroup) CDCPipeline {
 
 	st, err := NewStateTracker(name, conf)
 	if err != nil {
@@ -55,7 +55,7 @@ func NewCDCPipeline(name string, conf *config.CDCConfig) CDCPipeline {
 		trn,
 		k,
 		rawEventCh,
-		sync.WaitGroup{},
+		wg,
 	}
 }
 
