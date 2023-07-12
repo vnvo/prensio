@@ -1,0 +1,69 @@
+[mysql]
+name = "tenant_db_1234"
+addr = "127.0.0.1:6033"
+port = 6033
+user = "root"
+pass = "root"
+server_id = 1
+
+[source_rules]
+include_schemas = [
+    "test_.*",
+    ""
+]
+
+exclude_schemas = [
+    "test_123"
+]
+
+include_tables = [
+    "table_.*"
+]
+
+exclude_tables = [
+    "table_1"
+]
+
+[[transform_rule]]
+name = "generic"
+match_schema = "test_.*"
+match_table = "test_.*"
+transform_func = """
+function transform(cdc_event) {
+    verdict = ACTION_CONT
+
+    cdc_event.after.forEach((e) => {
+        if (e.text_col == "ignore") {
+            verdict = ACTION_DROP
+        }
+
+        if (e.text_col == "change-kafka") {
+            cdc_event.kafka.topic = "another-topic"
+            cdc_event.kafka.key = "another-msg-key"
+        }
+
+        if (e.text_col.length > 3) {
+            e.text_col = tObfString(e.text_col)
+        }
+    });
+    return verdict
+}
+"""
+
+[[transform_rule]]
+name = "another-rule"
+match_schema = "tenant_.*"
+match_table = "entity_1"
+transform_func = """
+function transform(cdc_event) {
+    return ACTION_DROP
+}
+"""
+
+[kafka_sink]
+name = "my-kafka-cluster"
+addr = "127.0.0.1:29092,127.0.0.1:39092,127.0.0.1:49092"
+
+[state_tracking]
+kafka_addr = "127.0.0.1:39092"
+state_topic = ""
