@@ -11,9 +11,9 @@ Is a simple and flexible [Change Data Capture](https://en.wikipedia.org/wiki/Cha
  - [x] Low overhead and sub-millisecond processing per event on default settings
  - [x] Dynamic topic and key selection
  - [x] Selective drop/skip based on the event content
- - [ ] Run multiple pipelines per instance
+ - [x] Run multiple pipelines per instance
  - [ ] Supports outbox pattern
- - [ ] Track the last state and ability to seek using GTID
+ - [x] Track the last state and ability to seek using GTID
  - [x] Simple to config and use
  - [ ] REST APIs to manage the runtime
  - [ ] Resilient to failures from both ends
@@ -24,16 +24,16 @@ Is a simple and flexible [Change Data Capture](https://en.wikipedia.org/wiki/Cha
 
 ## Default Behaviour
 *NB: this can change before the first stable release.*
-Default behaviour of Prensio is summarizezd below. Please note that a big part these points are available to transform functions and can be overwritten on the fly (see Transformer):
-- Sequentional processing per pipeline. Change events are processed in the order they arrive from the source database.
-- Pipelines are independent processes.
-- On irrecoverable errors, prensio will log the error and will exit
+Default behaviour of Prensio is summed up below. Please note that some steps are directly controlled by transform functions and can be overwritten on the fly (see `Transformer`):
+- Sequentional processing per pipeline. Change events are processed in the order they arrive from the source db.
+- Pipelines are independent processes with their own state tracker.
+- On irrecoverable errors, prensio will log the error and exit.
 - Kafka topic: default value is `"{schema-name}[.]{table-name}"` for each event.
-- Kafka topic will be created if it doesn't exist
+- Kafka topic will be created if it doesn't exist.
 - Kafka message key: 
 -- If table has primary key, it will be a dot-separate list of all the columns that are part of the PK - `"{col1}[.]{col2}..."`.
 -- If not, it will be same as default kafka topic value.
-- Events are json encoded when produced to kafka
+- Events are `json encoded` when produced to kafka.
 - Transformer scripts are checked on startup and before any event processing. Any failure will be logged and Prensio will exit abnormally. 
 
 ## Components
@@ -41,8 +41,7 @@ Components of this system are:
 ![Components](/docs/prensio-components.png?raw=true "Components")
 
 ### Pipeline
-The high level construct to manage the flow of events from a source (mysql) to a sink (kafka). Pipeline(s) are created at startup using the supplied configuration files but you can use the REST APIs to build automation and dynamically manage the pipelines at runtime.
-[more info TBD]
+The high level construct to manage the flow of events from a source (mysql) to a sink (kafka). Pipeline(s) are created at startup using the supplied configuration files but you can use the REST APIs to build your own automation and dynamically manage the pipelines at runtime.
 
 ### MySQL Binlog Source
 The connector for mysql which reads the mysql binlog events. like go-mysql-elasticsearch the canal package from go-mysql is used.
@@ -51,7 +50,7 @@ The connector for mysql which reads the mysql binlog events. like go-mysql-elast
 ### Transformer
 The scriptable transformer using goja package. Using this javascript sandbox, you will define a transform function which will receive the event and can manipulate it. A simple example:
 
-*Caution: with flexibility comes ... hidden snakes. Refer to the "Usage Recommendations" section for some guidelines!*
+*Caution: with flexibility comes ... hidden dragons! Refer to the "Usage Recommendations" section for some guidelines.*
 
 ```javascript
 function transform(cdc_event) {
@@ -116,7 +115,7 @@ The package to store and load the state of the pipline between restarts and as t
 ## Usage Recommendations
 Given the flexibility provided with Prensio, it is important to be careful with that degree of freedom.
 - Consider keeping your transformation logic as simple as possible. It is very easy to get confused and shoot yourself in the foot with a big js code
-- It is tempting to enrich the event on the spot using the transformer, be mindful about the trade offs between performance, reliability and maintainability
+- It is tempting to enrich the event on the spot using the transformer, be mindful about the trade offs between performance, reliability and maintainability.
 - Depending on your tolerance level, conside running one pipeline in each Prensio instance
 - [more to come]
 
@@ -131,7 +130,6 @@ If js sandbox is not enough for your need, you can add custom helpers to fetch d
 - on the spot event enrichment
 - highly dynamic event distribution to different kafka clusters and topics
 
-On some not-so-reliable tests, the total overhead of processing single change event was between 20 to 25 ms.
 
 ## How to Use
 [TBD]
