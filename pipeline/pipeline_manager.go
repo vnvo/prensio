@@ -2,9 +2,6 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
-	"io/fs"
-	"path/filepath"
 	"sync"
 
 	"github.com/siddontang/go-log/log"
@@ -48,6 +45,10 @@ func (pm *PipelineManager) Start() {
 			panic(err)
 		}
 	}
+
+	log.Infof("pipeline(s) creation finished successfully")
+
+	pm.wg.Wait()
 }
 
 func (pm *PipelineManager) startNewPipeline(conf config.CDCConfig) error {
@@ -72,34 +73,4 @@ func (pm *PipelineManager) startNewPipeline(conf config.CDCConfig) error {
 
 	pm.pipelines = append(pm.pipelines, &newPipeline)
 	return nil
-}
-
-func getCfgFiles(confPath string) ([]string, error) {
-	cfgFiles := make([]string, 0)
-	var cfg string
-
-	err := filepath.WalkDir(
-		confPath,
-		func(p string, d fs.DirEntry, err error) error {
-			if d.IsDir() {
-				return nil
-			}
-
-			if filepath.Ext(d.Name()) != ".toml" {
-				return nil
-			}
-
-			cfg = fmt.Sprintf("%s%s", confPath, d.Name())
-			log.Infof("discovered cfg: '%s'", cfg)
-
-			cfgFiles = append(cfgFiles, cfg)
-
-			return nil
-		})
-
-	if err != nil {
-		return cfgFiles, err
-	}
-
-	return cfgFiles, nil
 }

@@ -112,9 +112,15 @@ func getCfgFiles(confPath string) ([]string, error) {
 				return nil
 			}
 
-			cfg = filepath.Join(confPath, d.Name())
-			log.Infof("discovered cdc config: %s", cfg)
-			cfgFiles = append(cfgFiles, cfg)
+			//given config path was a file not a dir
+			if strings.HasSuffix(confPath, d.Name()) {
+				log.Infof("discovered cdc config: %s", confPath)
+				cfgFiles = append(cfgFiles, confPath)
+			} else {
+				cfg = filepath.Join(confPath, d.Name())
+				log.Infof("discovered cdc config: %s", cfg)
+				cfgFiles = append(cfgFiles, cfg)
+			}
 
 			return nil
 		})
