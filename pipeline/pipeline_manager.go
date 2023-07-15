@@ -13,7 +13,7 @@ import (
 
 type PipelineManager struct {
 	pipelines []*CDCPipeline
-	cfgFiles  []string
+	cdcConfs  []config.CDCConfig
 
 	wg  *sync.WaitGroup
 	ctx context.Context
@@ -22,20 +22,17 @@ type PipelineManager struct {
 func NewPipelineManager(confPath string) (*PipelineManager, error) {
 	// iterate over confPath, find any toml file and create a pipeline for each one
 	log.Infof("loading cfg files from '%s'", confPath)
-
-	cfgFiles, err := getCfgFiles(confPath)
+	cdcConfs, err := config.NewCDCConfigList(confPath)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	log.Infof("Cfg files loaded: %d", len(cfgFiles))
 
 	ctx := context.Background()
 	wg := sync.WaitGroup{}
 
 	pm := PipelineManager{
 		make([]*CDCPipeline, 0),
-		cfgFiles,
+		cdcConfs,
 		&wg,
 		ctx,
 	}
@@ -45,25 +42,24 @@ func NewPipelineManager(confPath string) (*PipelineManager, error) {
 
 func (pm *PipelineManager) Start() {
 	var err error
-	for _, cfg := range pm.cfgFiles {
-		log.Infof("creating new pipeline for '%s'", cfg)
-		err = pm.startNewPipeline(cfg)
+	for _, conf := range pm.cdcConfs {
+		err = pm.startNewPipeline(conf)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func (pm *PipelineManager) startNewPipeline(cfgPath string) error {
-	conf, err := config.NewCDCConfig(cfgPath)
-	if err != nil {
-		panic(err)
-	}
+func (pm *PipelineManager) startNewPipeline(conf config.CDCConfig) error {
 
 	newPipeline := NewCDCPipeline(conf.Mysql.Name, &conf, pm.wg)
-	log.Infof("[%s] pipeline created.", conf.Mysql.Name)
+	//log.Infof("[%s] pipeline created.", conf.Mysql.Name)
+	log.Infof(
+		"creating new pipeline for source=%s, sink=%s",
+		conf.Mysql.Name,
+		conf.KafkaSink.Name)
 
-	err = newPipeline.Init()
+	err := newPipeline.Init()
 	if err != nil {
 		return err
 	}

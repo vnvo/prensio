@@ -11,8 +11,6 @@ import (
 
 func main() {
 
-	// prensio run --config=/path/to/conf.toml
-	// prensio run --config-dir=/path/to/dir
 	app := &cli.App{
 		Name:        "prensio",
 		HelpName:    "prensio",
