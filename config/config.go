@@ -2,7 +2,7 @@ package config
 
 import (
 	"io/fs"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -60,7 +60,7 @@ type CDCConfig struct {
 func NewCDCConfig(path string) (CDCConfig, error) {
 	var conf CDCConfig
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return conf, err
 	}
